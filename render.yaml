@@ -1,0 +1,11 @@
+# Render Blueprint · 纯静态作品集
+# 静态站在 Blueprint 里是 type: web + runtime: static（不是 type: static）
+# 无 buildCommand（纯静态零构建）、无 plan（Static Site 免费）
+services:
+  - type: web
+    name: li-xiaoyang-portfolio
+    runtime: static
+    staticPublishPath: ./public
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>李晓阳 · AI 应用开发工程师作品集</title>
+<meta name="description" content="李晓阳的工程作品集：Agentic RAG 知识库、自主编码 Agent 运行时、学员管理平台与开源全栈 API。附可回源的项目数字、已知边界与开源地址。">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip" href="#main">跳到主要内容</a>
+
+<header class="nav">
+  <a class="brand" href="#top">李晓阳<span class="brand-dot">.</span></a>
+  <nav aria-label="主导航">
+    <a href="#work">作品</a>
+    <a href="#capability">能力</a>
+    <a href="#career">履历</a>
+    <a href="#contact">联系</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="top">
+    <p class="eyebrow">AI APPLICATION ENGINEER · 2026</p>
+    <h1>会前端的 <em>AI 应用工程师</em></h1>
+    <p class="hero-copy">近 4 年联想全球电商前端开发，1 年日本全栈交付，山梨大学硕士（深度学习方向）。现在专注 AI 应用与 Agent 工程：从检索链路、工具调用到评测与运行边界，每个结论都有可复跑的脚本和可核对的数字。</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#work">查看作品 <span aria-hidden="true">→</span></a>
+      <a class="btn" href="resume.pdf" download>下载简历 PDF</a>
+      <a class="btn" href="https://github.com/zuishuailxy" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </div>
+    <dl class="stats">
+      <div><dt>4 年</dt><dd>联想全球电商前端</dd></div>
+      <div><dt>2 套</dt><dd>开源 AI 应用系统</dd></div>
+      <div><dt>206 条</dt><dd>离线评测集</dd></div>
+      <div><dt>265 个</dt><dd>离线单元测试</dd></div>
+    </dl>
+    <p class="hero-foot">成都 · 日语 JLPT N1 · 可立即到岗</p>
+  </section>
+
+  <!-- ===== 作品 ===== -->
+  <section class="section" id="work">
+    <div class="section-head">
+      <p class="eyebrow">SELECTED WORK</p>
+      <h2>四个作品，四条证据链</h2>
+      <p class="section-note">每个项目都写明「做了什么」「数字怎么来的」「哪里还没做到」。架构与取舍由我主导，实现过程中与 AI 协作。</p>
+    </div>
+
+    <!-- 01 my-rag -->
+    <article class="project" id="my-rag">
+      <div class="project-head">
+        <span class="num">01</span>
+        <div>
+          <h3>智能知识库问答系统 <span class="en">· Agentic RAG</span></h3>
+          <p class="project-meta">主作品 · 2026.08 – 至今 · Python / FastAPI / React 19</p>
+        </div>
+      </div>
+      <p class="lede">面向企业知识管理场景的 AI 问答系统。答案带 [n] 引用、可回溯原文分片，支持分级访问控制与内容审核。</p>
+
+      <div class="media-slot" data-media="my-rag"></div>
+
+      <div class="project-grid">
+        <div>
+          <h4>关键设计</h4>
+          <ul>
+            <li>多格式文档解析 → 向量（pgvector）/ 全文（Elasticsearch IK）/ 图谱（Neo4j）三类索引。</li>
+            <li>双路并行召回 → RRF 融合 → Reranker 精排；知识检索、查询改写、图谱查询、联网搜索封装为 4 个工具，由 Agent 自主选择调用。</li>
+            <li>回答经 SSE 流式输出，前端实时渲染文本、工具状态与引用溯源。</li>
+          </ul>
+        </div>
+        <div>
+          <h4>可验证结果</h4>
+          <ul>
+            <li><strong>206 条</strong>离线评测集（检索 148 + 生成 58），另有 19 条图谱专项。</li>
+            <li>51 条近义改写难例，<strong>Hit@1 0.706 → 0.941</strong>（基线为纯向量单路）。</li>
+            <li>20 并发出现 5 个失败、p50 2.5s → 31s，定位到 FastAPI 生成器依赖持有数据库会话；改短生命周期会话后<strong>100 并发零失败</strong>（单机压测、Mock 模型服务）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="boundary"><strong>已知边界</strong>：自建项目，本地 Docker Compose 运行，无真实用户、未上公网；压测为单机 Mock，不代表生产容量；查询向量落盘冻结后才消除服务端浮点非确定性带来的评测抖动。</p>
+      <p class="tags"><span>Python 3.12</span><span>FastAPI</span><span>LangGraph</span><span>pgvector</span><span>Elasticsearch</span><span>Neo4j</span><span>React 19</span><span>SSE</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/my-rag" target="_blank" rel="noopener noreferrer">开源代码与文档 →</a></p>
+    </article>
+
+    <!-- 02 tiny-claw -->
+    <article class="project" id="tiny-claw">
+      <div class="project-head">
+        <span class="num">02</span>
+        <div>
+          <h3>自主编码 Agent 运行时 <span class="en">· tiny-claw</span></h3>
+          <p class="project-meta">差异化作品 · 2026.06 – 2026.09 · Python / asyncio / MCP</p>
+        </div>
+      </div>
+      <p class="lede">自托管的自主编码 Agent 运行时，提供 CLI 与飞书机器人两个入口，重点解决长任务上下文超限、工具失败循环与高危操作权限三类问题。</p>
+
+      <div class="media-slot" data-media="tiny-claw"></div>
+
+      <div class="project-grid">
+        <div>
+          <h4>关键设计</h4>
+          <ul>
+            <li>Agent Loop 自主完成推理、工具选择、结果回传与下一轮决策；工具异常转标准化错误码，不让异常中断主循环。</li>
+            <li>上下文按信息价值分 6 档渐进淘汰，保护用户指令与失败记录；采用确定性淘汰、不依赖 LLM 摘要。</li>
+            <li>MCP 工具经适配层注册并做命名空间隔离；7 条高危命令规则命中后转飞书人工审批，超时 300s 默认拒绝。</li>
+          </ul>
+        </div>
+        <div>
+          <h4>可验证结果</h4>
+          <ul>
+            <li><strong>265 个</strong>单元测试全绿且全部离线可跑；21 个错误码 + 20 条表驱动恢复提示。</li>
+            <li>每轮固定注入 Token <strong>1818 → 1013（−44%）</strong>；以真实账单校准计量后，估算倍率偏差 <strong>3.05 → 1.34</strong>。</li>
+            <li>双阶段推理对照实验：成本 +54%、耗时 +43%、通过率 4/4 vs 4/4 无差异，<strong>结论记为无提升</strong>（两次跑分非同组复跑，存在天花板效应）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="boundary"><strong>已知边界</strong>：自托管自用运行时，非通用框架；无公网 Demo，演示需本机 CLI；飞书审批需自行配置；MCP 端到端只验证过 stdio 传输。</p>
+      <p class="tags"><span>Python 3.12</span><span>asyncio</span><span>MCP</span><span>DeepSeek</span><span>飞书开放平台</span><span>pytest</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/tiny-claw" target="_blank" rel="noopener noreferrer">开源代码与文档 →</a></p>
+    </article>
+
+    <!-- 03 student-admin-system -->
+    <article class="project" id="student-admin">
+      <div class="project-head">
+        <span class="num">03</span>
+        <div>
+          <h3>学员管理平台 <span class="en">· student-admin-system</span></h3>
+          <p class="project-meta">工程广度 · FastAPI / PostgreSQL / React 18 / Ant Design</p>
+        </div>
+      </div>
+      <p class="lede">教育机构学员管理闭环：建档 → 试听 → 结果 → 跟进任务 → 完成。用来证明业务系统从规则、数据约束到前端交互的完整落地能力。</p>
+
+      <div class="media-slot" data-media="student-admin"></div>
+
+      <div class="project-grid">
+        <div>
+          <h4>关键设计</h4>
+          <ul>
+            <li>状态机约束放在服务端，服务端规则与数据库约束双重兜底。</li>
+            <li>AI 摘要异步执行、失败降级，不阻塞业务主流程。</li>
+            <li>种子数据确定性，14 条决策记录保留每次技术取舍的理由。</li>
+          </ul>
+        </div>
+        <div>
+          <h4>可验证结果</h4>
+          <ul>
+            <li><strong>20 个 API / 6 张表 / 31 个后端测试</strong>，接口与数据模型可逐项对照。</li>
+            <li>前后端分离：FastAPI + PostgreSQL 提供接口，React 18 + TypeScript + Ant Design 构建管理界面。</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="boundary"><strong>已知边界</strong>：使用示例数据，非真实业务系统；在线 Demo 当前不可用，本站以截图 / 录屏代替现场演示。</p>
+      <p class="tags"><span>FastAPI</span><span>PostgreSQL</span><span>React 18</span><span>TypeScript</span><span>Ant Design</span></p>
+    </article>
+
+    <!-- 04 leo-api -->
+    <article class="project" id="leo-api">
+      <div class="project-head">
+        <span class="num">04</span>
+        <div>
+          <h3>开源全栈 API <span class="en">· leo-api</span></h3>
+          <p class="project-meta">Node.js 佐证 · Express 4 / Sequelize / MySQL / Redis</p>
+        </div>
+      </div>
+      <p class="lede">leo-api 是一套基于 Node.js 的开源全栈 API，用于在本地跑通接口、数据与实时推送的后端链路。后端以 Express 4 直接依赖搭建，Sequelize 操作 MySQL，22 个迁移管理表结构演进，路由按前台、管理端与第三方入口分层；JWT 三层鉴权与 SSE 通道覆盖权限和消息推送。架构与取舍由我主导，实现含 AI 协作。项目自建开源，Docker Compose 本地启动，无自动化测试，未上生产环境。</p>
+
+      <div class="media-slot" data-media="leo-api"></div>
+
+      <div class="project-grid">
+        <div>
+          <h4>关键设计</h4>
+          <ul>
+            <li>跨进程 SSE：连接分散在多个进程时单进程广播会丢消息，故用 Redis Pub/Sub 做公共总线，配独立订阅连接、并发锁、25s 心跳与关闭清理。</li>
+            <li>JWT 三层鉴权：用户、管理员（role=100）与 SSE 分离，实时通道不复用高权限令牌，兼容原生 EventSource 的 <code>?token=</code>。</li>
+            <li>22 个迁移、10 个模型，表结构演进可版本化回放与回滚。</li>
+          </ul>
+        </div>
+        <div>
+          <h4>项目价值</h4>
+          <ul>
+            <li>与 Python / FastAPI 两套 AI 项目形成 Node.js + Python 双栈证据。</li>
+            <li>Express 为 <code>~4.16.1</code> 直接依赖，可正面说明对 Express 的熟悉程度。</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="boundary"><strong>已知边界</strong>：自建开源项目，Docker Compose 本地起 MySQL，无自动化测试，非生产运行，仅作本地演示与能力佐证。</p>
+      <p class="tags"><span>Express 4</span><span>Sequelize</span><span>MySQL</span><span>Redis Pub/Sub</span><span>SSE</span><span>Docker Compose</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/KnowledgeBase/tree/master/full-stack/leo-api" target="_blank" rel="noopener noreferrer">开源代码 →</a></p>
+    </article>
+  </section>
+
+  <!-- ===== 能力 ===== -->
+  <section class="section" id="capability">
+    <div class="section-head">
+      <p class="eyebrow">WHAT I DO</p>
+      <h2>能力概览</h2>
+    </div>
+
+    <div class="capabilities">
+      <div class="capability">
+        <span class="num">01</span>
+        <h3>AI 应用与 Agent</h3>
+        <p>RAG 全链路、Agent Loop、工具调用与权限边界、上下文压缩、离线评测与可观测。结论优先用脚本跑出来，而不是凭感觉。</p>
+      </div>
+      <div class="capability">
+        <span class="num">02</span>
+        <h3>全栈交付</h3>
+        <p>Python / FastAPI 与 Node / Express 双栈，PostgreSQL、Redis、Elasticsearch、Neo4j 数据层，Docker Compose 编排与部署。</p>
+      </div>
+      <div class="capability">
+        <span class="num">03</span>
+        <h3>前端工程</h3>
+        <p>近 4 年联想全球电商前端，Vue 3 / Vue 2 / React 19 + TypeScript，SSE 流式界面、多端适配、Web Worker 与无障碍。</p>
+      </div>
+    </div>
+
+    <h3 class="subhead">岗位 × 技能对照</h3>
+    <p class="section-note">点开看「大白话解释」与「面试怎么讲」。数字口径与简历、项目 README 一致。</p>
+    <div class="skill-groups">
+      <details class="skill">
+        <summary>RAG 混合召回与重排 <span class="plus" aria-hidden="true">+</span></summary>
+        <p>大白话：先用关键词和向量各找一遍资料，按排名融合后再精排，避免只靠一种方式漏掉答案。</p>
+        <p>面试怎么讲：讲双路 RRF 而不是三路全融合（图谱是结构化查询，按需调用更准），以及为什么对全部候选精排后再过滤截断。<span class="ref">关联：my-rag</span></p>
+      </details>
+      <details class="skill">
+        <summary>评测与可复现 <span class="plus" aria-hidden="true">+</span></summary>
+        <p>大白话：先固定题目和标准答案，再改系统，才知道每次改动到底有没有变好。</p>
+        <p>面试怎么讲：206 条评测集按单跳 any-of / 多跳 all-of 分别判分；同文本两次 embedding 有 1024 维中 1017 维不同，冻结查询向量后结果才稳定。<span class="ref">关联：my-rag</span></p>
+      </details>
+      <details class="skill">
+        <summary>Agent 上下文管理 <span class="plus" aria-hidden="true">+</span></summary>
+        <p>大白话：长任务会撑爆上下文，按信息价值分档淘汰，但用户指令和失败记录不能丢。</p>
+        <p>面试怎么讲：6 档确定性淘汰、不依赖 LLM 摘要（会抹掉错误码前缀且不可复现）；1818 → 1013 token。<span class="ref">关联：tiny-claw</span></p>
+      </details>
+      <details class="skill">
+        <summary>失败恢复与权限 <span class="plus" aria-hidden="true">+</span></summary>
+        <p>大白话：工具失败不抛异常中断主循环，转成错误码告诉模型下一步怎么办；高危动作先问人。</p>
+        <p>面试怎么讲：21 错误码 + 20 恢复提示、同一参数连续失败 3 次打断；审批超时 300s 默认拒绝（fail-closed）。<span class="ref">关联：tiny-claw / my-rag</span></p>
+      </details>
+      <details class="skill">
+        <summary>实时推送与流式界面 <span class="plus" aria-hidden="true">+</span></summary>
+        <p>大白话：后端一边生成一边推给浏览器，前端边收边渲染，还能看到工具调用状态。</p>
+        <p>面试怎么讲：SSE 编码器在后端；多进程下用 Redis Pub/Sub 广播；前端做引用溯源与状态展示。<span class="ref">关联：my-rag / leo-api</span></p>
+      </details>
+      <details class="skill">
+        <summary>工程化与质量 <span class="plus" aria-hidden="true">+</span></summary>
+        <p>大白话：结构统一、迁移可回放、测试离线能跑，改东西才敢改。</p>
+        <p>面试怎么讲：联想 Monorepo + Jenkins 统一构建、22 个数据库迁移、mypy / ruff / CI、265 个离线单测。<span class="ref">关联：联想 / leo-api / tiny-claw</span></p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===== 履历 ===== -->
+  <section class="section" id="career">
+    <div class="section-head">
+      <p class="eyebrow">EXPERIENCE</p>
+      <h2>履历与教育</h2>
+    </div>
+    <ol class="timeline">
+      <li>
+        <span class="when">2022.08 – 2026.06</span>
+        <div>
+          <h3>成都联想电子科技有限公司 · 前端开发工程师</h3>
+          <p>全球电商平台（B2C / B2B，60+ 国家、数百个站点）：Monorepo 统一工程结构与 Jenkins 发布流程；Motorola 海外电商 Vue 3 + Pinia + Vuetify 重构；Web Worker 性能优化与无障碍适配。</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2021.04 – 2022.04</span>
+        <div>
+          <h3>YSK e-com（日本） · 全栈开发工程师（System Engineer）</h3>
+          <p>企业 Web-EDI 交付：客户现场需求沟通与验收，Vue + Vuetify / PHP Laravel / MySQL 前后端开发，Docker 统一环境。</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2020.10 – 2021.03</span>
+        <div>
+          <h3>Artibrains（日本） · 算法工程师</h3>
+          <p>深度学习模型结构与超参数调优、特征提取与数据预处理，参与模型训练与验证。</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2018 – 2020</span>
+        <div>
+          <h3>山梨大学（日本） · 硕士</h3>
+          <p>机电工程（深度学习方向）。2011 – 2016 重庆医科大学本科 · 生物医科工程；日语 JLPT N1。</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ===== 联系 ===== -->
+  <section class="section contact" id="contact">
+    <div class="section-head">
+      <p class="eyebrow">CONTACT</p>
+      <h2>聊聊机会</h2>
+      <p class="section-note">成都，可立即到岗。目标岗位：AI 应用开发 / Agent 开发 / AI 全栈开发。</p>
+    </div>
+    <div class="contact-links">
+      <a class="btn btn-primary" href="mailto:leo_young_1993@foxmail.com?subject=%E6%B1%82%E8%81%8C%E4%BA%A4%E6%B5%81%20%E2%80%94%20AI%20%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91">发邮件 →</a>
+      <a class="btn" href="https://github.com/zuishuailxy" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      <a class="btn" href="resume.pdf" download>下载简历 PDF</a>
+    </div>
+    <p class="contact-mail">leo_young_1993@foxmail.com</p>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>© <span id="year">2026</span> 李晓阳 · 本页数字与简历、项目 README 同源，可回源核对。</p>
+  <p class="footer-note">自建静态站 · 无追踪脚本 · 无第三方字体请求</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
