@@ -27,6 +27,7 @@
   <section class="hero" id="top">
     <p class="eyebrow">AI APPLICATION ENGINEER · 2026</p>
     <h1>会前端的 <em>AI 应用工程师</em></h1>
+    <p class="role-line">求职方向：AI 应用开发工程师 · Agent 开发 · AI 全栈开发</p>
     <p class="hero-copy">近 4 年联想全球电商前端开发，1 年日本全栈交付，山梨大学硕士（深度学习方向）。现在专注 AI 应用与 Agent 工程：从检索链路、工具调用到评测与运行边界，每个结论都有可复跑的脚本和可核对的数字。</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#work">查看作品 <span aria-hidden="true">→</span></a>
@@ -35,9 +36,9 @@
     </div>
     <dl class="stats">
       <div><dt>4 年</dt><dd>联想全球电商前端</dd></div>
-      <div><dt>2 套</dt><dd>开源 AI 应用系统</dd></div>
-      <div><dt>206 条</dt><dd>离线评测集</dd></div>
-      <div><dt>265 个</dt><dd>离线单元测试</dd></div>
+      <div><dt>2 个</dt><dd>开源 AI 项目</dd></div>
+      <div><dt>206 条</dt><dd>RAG 离线评测用例</dd></div>
+      <div><dt>265 个</dt><dd>tiny-claw 单元测试</dd></div>
     </dl>
     <p class="hero-foot">成都 · 日语 JLPT N1 · 可立即到岗</p>
   </section>
@@ -76,7 +77,7 @@
           <h4>可验证结果</h4>
           <ul>
             <li><strong>206 条</strong>离线评测集（检索 148 + 生成 58），另有 19 条图谱专项。</li>
-            <li>51 条近义改写难例，<strong>Hit@1 0.706 → 0.941</strong>（基线为纯向量单路）。</li>
+            <li>51 条近义改写难例四级消融，hit@1：纯关键词 BM25 <strong>0.706</strong> → + 向量召回 0.804 → + 兜底门控 0.824 → + rerank <strong>0.941</strong>。</li>
             <li>20 并发出现 5 个失败、p50 2.5s → 31s，定位到 FastAPI 生成器依赖持有数据库会话；改短生命周期会话后<strong>100 并发零失败</strong>（单机压测、Mock 模型服务）。</li>
           </ul>
         </div>
@@ -155,8 +156,12 @@
         </div>
       </div>
 
-      <p class="boundary"><strong>已知边界</strong>：使用示例数据，非真实业务系统；在线 Demo 当前不可用，本站以截图 / 录屏代替现场演示。</p>
+      <p class="boundary"><strong>已知边界</strong>：使用示例数据，非真实业务系统；在线演示部署在免费实例上，闲置后首次访问可能需等待冷启动（约 1 分钟）。</p>
       <p class="tags"><span>FastAPI</span><span>PostgreSQL</span><span>React 18</span><span>TypeScript</span><span>Ant Design</span></p>
+      <p class="project-links">
+        <a href="https://student-admin-demo.onrender.com/admin" target="_blank" rel="noopener noreferrer">在线演示（Admin 角色）→</a>
+        <a href="https://student-admin-demo.onrender.com/docs" target="_blank" rel="noopener noreferrer">API 文档 →</a>
+      </p>
     </article>
 
     <!-- 04 leo-api -->
