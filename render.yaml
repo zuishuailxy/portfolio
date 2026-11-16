@@ -6,6 +6,12 @@ services:
     name: li-xiaoyang-portfolio
     runtime: static
     staticPublishPath: ./public
-    envVars:
-      - key: SKIP_INSTALL_DEPS
-        value: "true"
+    headers:
+      # 简历 PDF 体积较大且不常变，给一天缓存。
+      # HTML / CSS / JS 保持默认协商缓存，避免发版后访客拿到旧页面。
+      - path: /Li-Xiaoyang-AI-Engineer-Resume.pdf
+        name: Cache-Control
+        value: public, max-age=86400
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

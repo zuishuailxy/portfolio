@@ -51,15 +51,22 @@ code {
   display: flex; align-items: center; justify-content: space-between;
   gap: 24px;
   max-width: var(--max); margin: 0 auto;
-  padding: 18px 28px;
+  padding: 8px 28px;
   background: rgba(255,255,255,.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
-.brand { font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: .02em; }
+.brand {
+  display: inline-flex; align-items: center; min-height: 44px;
+  font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: .02em;
+}
 .brand-dot { color: var(--accent); }
-.nav nav { display: flex; gap: 26px; font-size: 14px; }
-.nav nav a { color: var(--muted); }
+.nav nav { display: flex; gap: 14px; font-size: 14px; }
+.nav nav a {
+  display: inline-flex; align-items: center;
+  min-height: 44px; padding: 0 6px;   /* 触控目标 ≥ 44px */
+  color: var(--muted);
+}
 .nav nav a:hover { color: var(--accent); }
 
 /* ===== 通用区块 ===== */
@@ -87,6 +94,7 @@ code {
   color: var(--accent);
   border-bottom: 3px solid var(--accent);
   padding-bottom: .06em;
+  white-space: nowrap;   /* 窄屏不要把「工程师」拆到两行 */
 }
 .role-line {
   margin: 16px 0 0;
@@ -176,10 +184,12 @@ code {
   border: 1px solid var(--line); border-radius: 999px;
   padding: 4px 11px;
 }
-.project-links { display: flex; flex-wrap: wrap; gap: 20px; margin: 24px 0 0; font-size: 15px; font-weight: 600; }
+.project-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 0 0; font-size: 15px; font-weight: 600; }
+.project-links a { display: inline-flex; align-items: center; min-height: 44px; }
 
-/* ===== 媒体挂载位（无素材时由 app.js 移除，不留空框） ===== */
+/* ===== 媒体挂载位（无素材时不留空框：JS 移除 + CSS 兜底） ===== */
 .media-slot { margin-top: 28px; }
+.media-slot:empty { display: none; }   /* JS 未执行 / 被拦时也不占位 */
 .media-figure { margin: 0; }
 .media-figure img, .media-figure video, .media-figure iframe {
   display: block; width: 100%;
@@ -187,7 +197,7 @@ code {
   background: var(--surface);
 }
 .media-figure video { max-height: 520px; }
-.media-figure iframe { aspect-ratio: 16 / 9; height: auto; min-height: 320px; border: 1px solid var(--line); }
+.media-figure iframe { aspect-ratio: 16 / 9; height: auto; max-height: 560px; }
 .media-figure figcaption { margin-top: 9px; font-size: 13px; color: var(--muted); }
 
 /* ===== 能力 ===== */
@@ -244,8 +254,9 @@ code {
 
 /* ===== 响应式 ===== */
 @media (max-width: 840px) {
-  .nav { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
-  .nav nav { gap: 16px; font-size: 13px; }
+  .nav { padding: 8px 20px; flex-wrap: wrap; gap: 6px; }
+  .nav nav { gap: 8px; font-size: 13px; }
+  .nav nav a { min-height: 44px; padding: 0 4px; }
   .hero, .section { padding-left: 20px; padding-right: 20px; }
   .footer { padding-left: 20px; padding-right: 20px; }
   .stats { grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
@@ -256,7 +267,7 @@ code {
 }
 @media (max-width: 480px) {
   .stats { grid-template-columns: 1fr 1fr; }
-  .btn { padding: 10px 14px; font-size: 14px; }
+  .btn { padding: 12px 14px; font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
