@@ -18,6 +18,7 @@ public/
     og-cover.png      1200×630 社交分享封面
 render.yaml           Render Blueprint（静态站，发布 public/）
 scripts/build-resume.py  简历 PDF 无损重压缩（见「简历 PDF 的来源」）
+INTERVIEW-NOTES.md   面试话术与取舍判断（本地准备材料，不发布）
 ```
 
 ## 简历 PDF 的来源
@@ -64,6 +65,10 @@ python3 scripts/build-resume.py ~/Project/简历/李晓阳-硕士-AI应用开发
 | 22 / 10 | leo-api 的数据库迁移 / 模型 | 同上 |
 
 新增数字前先确认能回源，否则不要写进页面。
+
+面试时的回答思路、追问用的边界判断（为什么双路不三路、为什么会冻结查询向量等）
+放在 [`INTERVIEW-NOTES.md`](INTERVIEW-NOTES.md)。那是本地准备材料，不发布到作品页——
+公开页面只展示可验证事实，不展示话术。
 
 ## 本地预览
 

@@ -252,40 +252,6 @@
       </div>
     </div>
 
-    <h3 class="subhead">岗位 × 技能对照</h3>
-    <p class="section-note">点开看「大白话解释」与「面试怎么讲」。数字口径与简历、项目 README 一致。</p>
-    <div class="skill-groups">
-      <details class="skill">
-        <summary>RAG 混合召回与重排 <span class="plus" aria-hidden="true">+</span></summary>
-        <p>大白话：先用关键词和向量各找一遍资料，按排名融合后再精排，避免只靠一种方式漏掉答案。</p>
-        <p>面试怎么讲：讲双路 RRF 而不是三路全融合（图谱是结构化查询，按需调用更准），以及为什么对全部候选精排后再过滤截断。<span class="ref">关联：my-rag</span></p>
-      </details>
-      <details class="skill">
-        <summary>评测与可复现 <span class="plus" aria-hidden="true">+</span></summary>
-        <p>大白话：先固定题目和标准答案，再改系统，才知道每次改动到底有没有变好。</p>
-        <p>面试怎么讲：206 条评测集按单跳 any-of / 多跳 all-of 分别判分；同文本两次 embedding 有 1024 维中 1017 维不同，冻结查询向量后结果才稳定。<span class="ref">关联：my-rag</span></p>
-      </details>
-      <details class="skill">
-        <summary>Agent 上下文管理 <span class="plus" aria-hidden="true">+</span></summary>
-        <p>大白话：长任务会撑爆上下文，按信息价值分档淘汰，但用户指令和失败记录不能丢。</p>
-        <p>面试怎么讲：6 档确定性淘汰、不依赖 LLM 摘要（会抹掉错误码前缀且不可复现）；1818 → 1013 token。<span class="ref">关联：tiny-claw</span></p>
-      </details>
-      <details class="skill">
-        <summary>失败恢复与权限 <span class="plus" aria-hidden="true">+</span></summary>
-        <p>大白话：工具失败不抛异常中断主循环，转成错误码告诉模型下一步怎么办；高危动作先问人。</p>
-        <p>面试怎么讲：21 错误码 + 20 恢复提示、同一参数连续失败 3 次打断；审批超时 300s 默认拒绝（fail-closed）。<span class="ref">关联：tiny-claw / my-rag</span></p>
-      </details>
-      <details class="skill">
-        <summary>实时推送与流式界面 <span class="plus" aria-hidden="true">+</span></summary>
-        <p>大白话：后端一边生成一边推给浏览器，前端边收边渲染，还能看到工具调用状态。</p>
-        <p>面试怎么讲：SSE 编码器在后端；多进程下用 Redis Pub/Sub 广播；前端做引用溯源与状态展示。<span class="ref">关联：my-rag / leo-api</span></p>
-      </details>
-      <details class="skill">
-        <summary>工程化与质量 <span class="plus" aria-hidden="true">+</span></summary>
-        <p>大白话：结构统一、迁移可回放、测试离线能跑，改东西才敢改。</p>
-        <p>面试怎么讲：联想 Monorepo + Jenkins 统一构建、22 个数据库迁移、mypy / ruff / CI、265 个离线单测。<span class="ref">关联：联想 / leo-api / tiny-claw</span></p>
-      </details>
-    </div>
   </section>
 
   <!-- ===== 履历 ===== -->

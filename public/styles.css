@@ -210,24 +210,6 @@ code {
 .capability .num { padding-top: 0; }
 .capability h3 { font-size: 19px; }
 .capability p { margin: 0; font-size: 14px; color: var(--muted); max-width: 34ch; }
-.subhead { margin-top: 72px; font-size: 22px; }
-.skill-groups { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.skill {
-  border: 1px solid var(--line); border-radius: 8px;
-  padding: 0 18px; background: #fff;
-}
-.skill summary {
-  cursor: pointer; list-style: none;
-  padding: 16px 0; font-weight: 600; color: var(--ink);
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-}
-.skill summary::-webkit-details-marker { display: none; }
-.skill .plus { color: var(--accent); font-size: 20px; line-height: 1; }
-.skill[open] .plus { transform: rotate(45deg); }
-.skill[open] { border-color: #c4d1e8; }
-.skill p { margin: 0 0 12px; font-size: 14px; color: var(--ink-2); }
-.skill .ref { color: var(--muted); font-size: 13px; white-space: nowrap; }
-
 /* ===== 履历 ===== */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li {
@@ -260,7 +242,7 @@ code {
   .hero, .section { padding-left: 20px; padding-right: 20px; }
   .footer { padding-left: 20px; padding-right: 20px; }
   .stats { grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
-  .project-grid, .capabilities, .skill-groups { grid-template-columns: 1fr; }
+  .project-grid, .capabilities { grid-template-columns: 1fr; }
   .project-head { gap: 14px; }
   .timeline li { grid-template-columns: 1fr; gap: 6px; }
   .hero h1 { max-width: none; }
