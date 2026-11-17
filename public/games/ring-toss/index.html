@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1030">
+<title>Ring Toss King · Night Market</title>
+<meta name="description" content="A night market ring toss game. Drag, aim and toss rings to catch prizes.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0d0a18; }
+  body { touch-action:none; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+  #stage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  canvas { display:block; touch-action:none; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="game"></canvas></div>
+<script>
+(function () {
+  'use strict';
+
+  // ===== Virtual canvas (9:16 portrait), scaled & centered for desktop and mobile =====
+  var VW = 720, VH = 1280;
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var scale = 1, offX = 0, offY = 0, dpr = 1;
+
+  function resize() {
+    var w = window.innerWidth, h = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    scale = Math.min(w / VW, h / VH);
+    offX = (w - VW * scale) / 2;
+    offY = (h - VH * scale) / 2;
+  }
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+  resize();
+
+  // screen coordinates -> virtual coordinates
+  function toVirtual(clientX, clientY) {
+    var r = canvas.getBoundingClientRect();
+    return {
+      x: (clientX - r.left - offX) / scale,
+      y: (clientY - r.top - offY) / scale
+    };
+  }
+
+  // ===== Simple sound effects (WebAudio synthesis, no audio files) =====
+  var actx = null;
+  function audio() {
+    if (!actx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) actx = new AC();
+    }
+    if (actx && actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  function beep(freq, dur, type, vol, slideTo) {
+    var a = audio(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, a.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, a.currentTime + dur);
+    g.gain.setValueAtTime(0.0001, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol || 0.14, a.currentTime + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(); o.stop(a.currentTime + dur + 0.02);
+  }
+  var sfx = {
+    thumb: function () { beep(220, 0.09, 'triangle', 0.06, 300); },
+    throw: function () { beep(520, 0.16, 'sine', 0.10, 180); },
+    catch: function (pts) {
+      beep(660, 0.10, 'sine', 0.13, 990);
+      setTimeout(function () { beep(990, 0.14, 'sine', 0.11, 1320); }, 85);
+      if (pts >= 50) setTimeout(function () { beep(1320, 0.20, 'sine', 0.10, 1760); }, 175);
+    },
+    near: function () { beep(180, 0.12, 'triangle', 0.07, 140); },
+    miss: function () { beep(150, 0.14, 'sine', 0.05, 90); },
+    over: function () {
+      [523, 440, 349, 262].forEach(function (f, i) {
+        setTimeout(function () { beep(f, 0.26, 'sine', 0.10); }, i * 150);
+      });
+    }
+  };
+
+  // ===== Game constants =====
+  var G = 620;             // gravity (virtual px/s^2)
+  var RINGS_PER_GAME = 12; // rings per game
+  var LAUNCH = { x: VW / 2, y: 1160 };
+  var HPOWER = 1.5;        // horizontal drag -> horizontal velocity
+  var VPOWER = 4.2;        // vertical drag -> vertical velocity (slingshot reverse)
+  var MIN_VY = -280;       // minimum upward velocity
+
+  var STATE = { MENU: 0, AIM: 1, FLY: 2, OVER: 3 };
+  var state = STATE.MENU;
+
+  var prizes = [];
+  var rings = [];
+  var flyRing = null;
+  var particles = [];
+  var floaters = [];
+  var score = 0, ringsLeft = RINGS_PER_GAME, combo = 0, bestCombo = 0;
+  var best = 0;
+  try { best = parseInt(localStorage.getItem('ringtoss_best') || '0', 10) || 0; } catch (e) {}
+  var flash = 0, shake = 0;
+  var aim = null;          // {ax,ay,cx,cy} slingshot anchor and current drag point
+  var pointerId = null;
+
+  // ===== Prize definitions (procedurally drawn, no images) =====
+  var KINDS = [
+    { type: 'bear',  name: 'Bear',   pts: 10 },
+    { type: 'duck',  name: 'Duck',   pts: 10 },
+    { type: 'bottle',name: 'Soda',   pts: 20 },
+    { type: 'gift',  name: 'Gift',   pts: 20 },
+    { type: 'egg',   name: 'Gold Egg', pts: 50 }
+  ];
+  function pickKind(row) {
+    // farther rows are more likely to hold high-value prizes
+    var pool = row === 0 ? ['egg','egg','gift','bottle']
+             : row === 1 ? ['bottle','gift','duck','bear','egg']
+             : ['duck','bear','duck','bear','bottle'];
+    var k = pool[(Math.random() * pool.length) | 0];
+    for (var i = 0; i < KINDS.length; i++) if (KINDS[i].type === k) return KINDS[i];
+    return KINDS[0];
+  }
+
+  function buildPrizes() {
+    prizes = [];
+    var rows = [
+      { y: 585, n: 4, s: 0.62 },
+      { y: 790, n: 5, s: 0.82 },
+      { y: 985, n: 6, s: 1.00 }
+    ];
+    for (var r = 0; r < rows.length; r++) {
+      var row = rows[r];
+      for (var i = 0; i < row.n; i++) {
+        var spread = 470;
+        var px = VW / 2 + (i - (row.n - 1) / 2) * (spread / (row.n - 1));
+        px += (Math.random() - 0.5) * 16;
+        var kind = pickKind(r);
+        var size = row.s;
+        prizes.push({
+          x: px, y: row.y, size: size, kind: kind,
+          catchY: row.y - 26 * size,
+          catchR: 30 * size + 6,   // catch radius slightly smaller than visual, to create "so close" moments
+          w: 96 * size, h: 96 * size,
+          caught: false, bob: Math.random() * Math.PI * 2,
+          glow: 0
+        });
+      }
+    }
+  }
+
+  function resetGame() {
+    score = 0; ringsLeft = RINGS_PER_GAME; combo = 0; bestCombo = 0;
+    rings = []; flyRing = null; particles = []; floaters = [];
+    flash = 0; shake = 0; aim = null;
+    buildPrizes();
+    state = STATE.AIM;
+  }
+
+  // ===== Input: slingshot-style drag to toss =====
+  function down(x, y) {
+    audio();
+    if (state === STATE.MENU) { startTap(x, y); return; }
+    if (state === STATE.OVER) { resetGame(); return; }
+    if (state !== STATE.AIM || flyRing) return;
+    // forward drag: anchor -> drag toward prizes (upward); farther drag = farther toss
+    aim = { ax: x, ay: y, cx: x, cy: y };
+    sfx.thumb();
+  }
+  function move(x, y) {
+    if (aim) { aim.cx = x; aim.cy = y; }
+  }
+  function up(x, y) {
+    if (!aim) return;
+    // forward: drag up more = throw higher (smaller y -> negative vy)
+    var vx = (x - aim.ax) * HPOWER;
+    var vy = (y - aim.ay) * VPOWER;
+    if (vy > MIN_VY) { aim = null; return; }  // not dragged up enough, discard
+    var len = Math.sqrt(vx * vx + vy * vy);
+    if (len > 1250) { vx *= 1250 / len; vy *= 1250 / len; }
+    // slight random jitter -- source of "so close" misses
+    vx += (Math.random() - 0.5) * 26;
+    flyRing = { x: LAUNCH.x, y: LAUNCH.y, px: LAUNCH.x, py: LAUNCH.y, vx: vx, vy: vy, rot: 0, life: 0 };
+    ringsLeft--;
+    combo = 0;
+    aim = null;
+    state = STATE.FLY;
+    sfx.throw();
+  }
+  function startTap(x, y) {
+    // menu: tap anywhere to start (button is just a hint)
+    resetGame();
+  }
+
+  canvas.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); pointerId = e.pointerId;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    var p = toVirtual(e.clientX, e.clientY); down(p.x, p.y);
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    e.preventDefault();
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    var p = toVirtual(e.clientX, e.clientY); move(p.x, p.y);
+  });
+  function endPointer(e) {
+    e.preventDefault();
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    var p = toVirtual(e.clientX, e.clientY); up(p.x, p.y);
+    pointerId = null;
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', function (e) {
+    e.preventDefault(); aim = null; pointerId = null;
+  });
+
+  // keyboard support too (desktop friendly)
+  window.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      if (state === STATE.MENU || state === STATE.OVER) { resetGame(); return; }
+    }
+    if (state === STATE.AIM && !flyRing) {
+      var vx = 0, vy = -900;
+      if (e.code === 'ArrowLeft') vx = -340;
+      if (e.code === 'ArrowRight') vx = 340;
+      flyRing = { x: LAUNCH.x, y: LAUNCH.y, px: LAUNCH.x, py: LAUNCH.y, vx: vx, vy: vy, rot: 0, life: 0 };
+      ringsLeft--; combo = 0; state = STATE.FLY; sfx.throw();
+    }
+  });
+
+  // ===== Effects =====
+  function burst(x, y, color, n) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2, sp = 80 + Math.random() * 260;
+      particles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+        life: 0.6 + Math.random() * 0.5, age: 0, color: color, r: 2 + Math.random() * 4 });
+    }
+  }
+  function floater(x, y, text, color, big) {
+    floaters.push({ x: x, y: y, text: text, color: color, age: 0, life: 1.0, big: !!big });
+  }
+
+  // ===== Update =====
+  function update(dt) {
+    flash = Math.max(0, flash - dt * 3);
+    shake = Math.max(0, shake - dt * 30);
+    for (var i = particles.length - 1; i >= 0; i--) {
+      var p = particles[i]; p.age += dt; p.vy += G * 0.35 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.age >= p.life) particles.splice(i, 1);
+    }
+    for (var j = floaters.length - 1; j >= 0; j--) {
+      var f = floaters[j]; f.age += dt; f.y -= 46 * dt;
+      if (f.age >= f.life) floaters.splice(j, 1);
+    }
+    for (var k = 0; k < prizes.length; k++) {
+      prizes[k].bob += dt * 2;
+      prizes[k].glow = Math.max(0, prizes[k].glow - dt * 2);
+    }
+
+    if (!flyRing) return;
+    var r = flyRing;
+    r.life += dt;
+    r.px = r.x; r.py = r.y;
+    r.vy += G * dt;
+    r.x += r.vx * dt; r.y += r.vy * dt;
+    r.rot += dt * 9;
+
+    // check catch on descent: compare ring center crossing the target base vertically
+    if (r.vy > 0) {
+      for (var m = 0; m < prizes.length; m++) {
+        var pz = prizes[m];
+        if (pz.caught) continue;
+        if (r.py <= pz.catchY && r.y >= pz.catchY) {
+          var dx = Math.abs(r.x - pz.x);
+          if (dx < pz.catchR) {
+            // hit
+            pz.caught = true; pz.glow = 1;
+            combo++; if (combo > bestCombo) bestCombo = combo;
+            var pts = pz.kind.pts * (combo >= 3 ? 2 : 1);
+            score += pts;
+            burst(pz.x, pz.catchY, pz.kind.pts >= 50 ? '#ffd35a' : '#7fe0c4', 18);
+            floater(pz.x, pz.catchY - 30, '+' + pts, '#fff3b0', true);
+            if (combo >= 2) floater(pz.x, pz.catchY - 70, 'COMBO x' + combo, '#ff9ad5', false);
+            flash = 0.5; shake = 7; sfx.catch(pz.kind.pts);
+            flyRing = null;
+            // if last ring hits, show briefly then end (otherwise score won't settle)
+            if (ringsLeft <= 0) setTimeout(endGame, 550);
+            else state = STATE.AIM;   // return to aim state, else game freezes after one toss
+            return;
+          } else if (dx < pz.catchR * 2.1) {
+            floater(pz.x, pz.catchY - 20, 'So close!', '#ffd9a0', false);
+            sfx.near();
+          }
+        }
+      }
+    }
+
+    // out of bounds / fell back to launch height / timeout -> miss
+    // note: boundary must be below launch point and only active on descent, else ring is judged out immediately
+    if ((r.vy > 0 && r.y > LAUNCH.y + 20) || r.x < -60 || r.x > VW + 60 || r.life > 3.2) {
+      floater(Math.max(60, Math.min(VW - 60, r.x)), 1120, 'Missed', '#c9c4d8', false);
+      sfx.miss();
+      flyRing = null;
+      if (ringsLeft <= 0) endGame();
+      else state = STATE.AIM;   // return to aim state, else game freezes after one toss
+    }
+  }
+
+  function endGame() {
+    state = STATE.OVER;
+    if (score > best) {
+      best = score;
+      try { localStorage.setItem('ringtoss_best', String(best)); } catch (e) {}
+    }
+    sfx.over();
+  }
+
+  // ===== Drawing helpers =====
+  function rr(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function text(str, x, y, size, color, align, weight) {
+    ctx.font = (weight || '600') + ' ' + size + 'px -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = color; ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  // ===== Background =====
+  function drawBackground(t) {
+    var g = ctx.createLinearGradient(0, 0, 0, VH);
+    g.addColorStop(0, '#150c28'); g.addColorStop(0.45, '#2a1236'); g.addColorStop(0.75, '#3a1730'); g.addColorStop(1, '#1c0f22');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+
+    // stars
+    ctx.fillStyle = 'rgba(255,240,200,0.55)';
+    for (var i = 0; i < 40; i++) {
+      var sx = (i * 137.5) % VW, sy = (i * 61) % 460;
+      var tw = 0.5 + 0.5 * Math.sin(t * 2 + i);
+      ctx.globalAlpha = tw * 0.8;
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    // string lights
+    ctx.strokeStyle = 'rgba(255,220,160,0.35)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, 120);
+    for (var x = 0; x <= VW; x += 40) ctx.lineTo(x, 120 + Math.sin(x / 90) * 16);
+    ctx.stroke();
+    for (var b = 30; b < VW; b += 72) {
+      var by = 120 + Math.sin(b / 90) * 16;
+      var glow = ctx.createRadialGradient(b, by + 12, 2, b, by + 12, 26);
+      glow.addColorStop(0, 'rgba(255,190,90,0.55)'); glow.addColorStop(1, 'rgba(255,190,90,0)');
+      ctx.fillStyle = glow; ctx.fillRect(b - 26, by - 14, 52, 52);
+      ctx.fillStyle = (b / 72) % 2 < 1 ? '#ffcf6b' : '#ff8a6b';
+      ctx.beginPath(); ctx.arc(b, by + 12, 7, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // lanterns
+    drawLantern(70, 210, 1.0, t); drawLantern(650, 240, 0.85, t + 1);
+
+    // stall canopy
+    ctx.fillStyle = '#7a1f2b'; ctx.fillRect(0, 300, VW, 26);
+    for (var s = 0; s < 12; s++) {
+      ctx.fillStyle = s % 2 ? '#c62b3a' : '#f2e6cf';
+      ctx.beginPath(); ctx.moveTo(s * 60, 300); ctx.lineTo(s * 60 + 60, 300);
+      ctx.lineTo(s * 60 + 30, 356); ctx.closePath(); ctx.fill();
+    }
+    // signboard
+    ctx.fillStyle = 'rgba(20,8,12,0.72)'; rr(VW / 2 - 170, 372, 340, 62, 14); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,205,110,0.5)'; ctx.lineWidth = 2; rr(VW / 2 - 170, 372, 340, 62, 14); ctx.stroke();
+    text('RING TOSS KING', VW / 2, 404, 26, '#ffd98a', 'center', '700');
+
+    // table (red velvet)
+    var tg = ctx.createLinearGradient(0, 470, 0, 1090);
+    tg.addColorStop(0, '#8e1d24'); tg.addColorStop(0.5, '#a3242b'); tg.addColorStop(1, '#70161d');
+    ctx.fillStyle = tg; ctx.fillRect(24, 470, VW - 48, 620);
+    ctx.strokeStyle = 'rgba(255,210,130,0.35)'; ctx.lineWidth = 3;
+    ctx.strokeRect(36, 482, VW - 72, 596);
+    // tablecloth texture
+    ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+    for (var q = 0; q < 22; q++) { ctx.beginPath(); ctx.moveTo(36 + q * 30, 482); ctx.lineTo(36 + q * 30, 1078); ctx.stroke(); }
+    // table edge
+    ctx.fillStyle = '#4a0f16'; ctx.fillRect(0, 1082, VW, 26);
+  }
+
+  function drawLantern(x, y, s, t) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    ctx.strokeStyle = 'rgba(255,210,130,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, -90); ctx.lineTo(0, -34); ctx.stroke();
+    var pulse = 0.75 + 0.25 * Math.sin(t * 1.6);
+    var glow = ctx.createRadialGradient(0, 0, 4, 0, 0, 70);
+    glow.addColorStop(0, 'rgba(255,120,60,' + (0.45 * pulse) + ')'); glow.addColorStop(1, 'rgba(255,120,60,0)');
+    ctx.fillStyle = glow; ctx.fillRect(-70, -70, 140, 140);
+    ctx.fillStyle = '#c9232c';
+    ctx.beginPath(); ctx.ellipse(0, 0, 30, 38, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8b24a'; ctx.fillRect(-14, -40, 28, 8); ctx.fillRect(-14, 32, 28, 8);
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1.5;
+    for (var i = -1; i <= 1; i++) { ctx.beginPath(); ctx.ellipse(0, 0, 30 + i * 9 - 9, 38, 0, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // ===== Prize drawing =====
+  function drawPrize(p, t) {
+    var bob = Math.sin(p.bob) * 2;
+    ctx.save(); ctx.translate(p.x, p.y + bob); ctx.scale(p.size, p.size);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath(); ctx.ellipse(0, 2, 44, 10, 0, 0, Math.PI * 2); ctx.fill();
+    if (p.glow > 0) {
+      ctx.fillStyle = 'rgba(255,230,140,' + (p.glow * 0.5) + ')';
+      ctx.beginPath(); ctx.arc(0, -34, 54, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = p.caught ? 0.45 : 1;
+    var k = p.kind.type;
+    if (k === 'bear') drawBear();
+    else if (k === 'duck') drawDuck();
+    else if (k === 'bottle') drawBottle();
+    else if (k === 'gift') drawGift();
+    else drawEgg(t);
+    ctx.globalAlpha = 1;
+    if (p.caught) {
+      text('✓', 0, -40, 30, '#9ff0c9', 'center', '700');
+    }
+    ctx.restore();
+  }
+  function drawBear() {
+    ctx.fillStyle = '#8a5a34';
+    ctx.beginPath(); ctx.arc(0, -46, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-20, -66, 10, 0, Math.PI * 2); ctx.arc(20, -66, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#a16c40'; ctx.beginPath(); ctx.ellipse(0, -8, 30, 30, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c99a63'; ctx.beginPath(); ctx.ellipse(0, -2, 16, 18, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2a1a10';
+    ctx.beginPath(); ctx.arc(-9, -48, 3, 0, Math.PI * 2); ctx.arc(9, -48, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -40, 5, 4, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawDuck() {
+    ctx.fillStyle = '#ffd23f';
+    ctx.beginPath(); ctx.ellipse(0, -14, 30, 24, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -44, 19, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f5a623'; ctx.beginPath(); ctx.ellipse(10, -40, 12, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2a1a10'; ctx.beginPath(); ctx.arc(-6, -48, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(-10, -20, 12, 7, -0.4, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawBottle() {
+    ctx.fillStyle = '#2f9e6f'; rr(-16, -58, 32, 58, 8); ctx.fill();
+    ctx.fillStyle = '#24805a'; ctx.fillRect(-8, -74, 16, 18);
+    ctx.fillStyle = '#e8e3d2'; rr(-12, -42, 24, 26, 3); ctx.fill();
+    text('SODA', 0, -29, 9, '#1c6b4a', 'center', '700');
+    ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.fillRect(-11, -54, 5, 48);
+  }
+  function drawGift() {
+    ctx.fillStyle = '#e0485a'; rr(-30, -52, 60, 52, 6); ctx.fill();
+    ctx.fillStyle = '#ff7a86'; ctx.fillRect(-30, -38, 60, 10);
+    ctx.fillStyle = '#ffd35a'; ctx.fillRect(-6, -52, 12, 52); ctx.fillRect(-30, -34, 60, 10);
+    ctx.beginPath(); ctx.arc(-12, -56, 9, 0, Math.PI * 2); ctx.arc(12, -56, 9, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawEgg(t) {
+    var pulse = 0.5 + 0.5 * Math.sin(t * 3 + 1);
+    var g = ctx.createRadialGradient(0, -40, 4, 0, -34, 46);
+    g.addColorStop(0, '#fff3b0'); g.addColorStop(0.5, '#ffd35a'); g.addColorStop(1, '#d99a1e');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, -32, 32, 40, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.3 + pulse * 0.4) + ')'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-18, -46); ctx.lineTo(-6, -34); ctx.lineTo(-16, -26); ctx.lineTo(-4, -16); ctx.stroke();
+  }
+
+  function drawRing(x, y, r, rot) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0);
+    ctx.lineWidth = 9;
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(0, 4, r, r * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#f4f2ff';
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#b9c4e8'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.42, 0, Math.PI * 0.15, Math.PI * 0.75); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawAimGuide() {
+    if (!aim || flyRing) return;
+    var vx = (aim.cx - aim.ax) * HPOWER, vy = (aim.cy - aim.ay) * VPOWER;
+    // drag guide line
+    ctx.strokeStyle = 'rgba(255,220,160,0.5)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(LAUNCH.x, LAUNCH.y); ctx.lineTo(aim.cx, aim.cy); ctx.stroke();
+    if (vy > MIN_VY) return;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    for (var i = 1; i <= 16; i++) {
+      var tt = i * 0.055;
+      var x = LAUNCH.x + vx * tt;
+      var y = LAUNCH.y + vy * tt + 0.5 * G * tt * tt;
+      if (y > LAUNCH.y + 20) break;
+      ctx.globalAlpha = 0.65 - i * 0.03;
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // ring in hand
+    drawRing(LAUNCH.x, LAUNCH.y, 26, 0);
+  }
+
+  // ===== HUD and screens =====
+  function drawHUD(t) {
+    ctx.fillStyle = 'rgba(12,6,18,0.6)'; rr(16, 16, VW - 32, 66, 16); ctx.fill();
+    text('SCORE', 40, 49, 17, '#bcb4cc', 'left', '600');
+    text(String(score), 122, 49, 30, '#fff3b0', 'left', '700');
+    text('BEST ' + best, 215, 49, 15, '#9c94ac', 'left', '500');
+    text('RINGS', VW - 40, 36, 14, '#bcb4cc', 'right', '600');
+    for (var i = 0; i < RINGS_PER_GAME; i++) {
+      var x = VW - 40 - i * 24;
+      ctx.strokeStyle = i < ringsLeft ? '#f4f2ff' : 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(x, 60, 8, 4, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (combo >= 2) {
+      text('COMBO x' + combo, VW / 2, 106, 22, '#ff9ad5', 'center', '700');
+    }
+    if (state === STATE.AIM && !flyRing) {
+      text('Drag up to aim, release to toss', VW / 2, 1205, 17, 'rgba(255,255,255,0.72)', 'center', '500');
+    }
+    // stack of rings to throw
+    if (ringsLeft > 0 && !flyRing && state !== STATE.MENU) drawRing(LAUNCH.x, LAUNCH.y, 26, t * 0.4);
+  }
+
+  function panel(x, y, w, h) {
+    ctx.fillStyle = 'rgba(14,7,20,0.86)'; rr(x, y, w, h, 26); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,205,110,0.45)'; ctx.lineWidth = 2; rr(x, y, w, h, 26); ctx.stroke();
+  }
+  function button(label, y) {
+    ctx.fillStyle = '#e0394a'; rr(VW / 2 - 140, y, 280, 74, 37); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.12)'; rr(VW / 2 - 140, y, 280, 34, 17); ctx.fill();
+    text(label, VW / 2, y + 37, 28, '#fff', 'center', '700');
+  }
+
+  function drawMenu(t) {
+    ctx.fillStyle = 'rgba(8,4,14,0.55)'; ctx.fillRect(0, 0, VW, VH);
+    panel(VW / 2 - 300, 690, 600, 300);
+    text('RING TOSS KING', VW / 2, 760, 40, '#ffd98a', 'center', '700');
+    text('NIGHT MARKET · CLASSIC GAME', VW / 2, 800, 15, '#c9a8d8', 'center', '500');
+    text('Drag up to aim · release to toss', VW / 2, 848, 19, '#e8e2f0', 'center', '500');
+    text('Smaller & farther prizes = more points', VW / 2, 880, 16, '#bcb4cc', 'center', '500');
+    button('PLAY NOW', 908);
+    var a = 0.55 + 0.45 * Math.sin(t * 3);
+    ctx.globalAlpha = a; text('Tap anywhere to start', VW / 2, 1040, 15, '#9c94ac', 'center', '500'); ctx.globalAlpha = 1;
+  }
+
+  function drawOver(t) {
+    ctx.fillStyle = 'rgba(8,4,14,0.62)'; ctx.fillRect(0, 0, VW, VH);
+    panel(VW / 2 - 300, 640, 600, 400);
+    text('GAME OVER', VW / 2, 700, 36, '#ffd98a', 'center', '700');
+    text(String(score), VW / 2, 780, 76, '#fff3b0', 'center', '700');
+    text('SCORE', VW / 2, 830, 16, '#bcb4cc', 'center', '500');
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(VW / 2 - 230, 866); ctx.lineTo(VW / 2 + 230, 866); ctx.stroke();
+    text('BEST ' + best, VW / 2 - 110, 900, 18, '#e8e2f0', 'center', '600');
+    text('BEST COMBO x' + bestCombo, VW / 2 + 110, 900, 17, '#ff9ad5', 'center', '600');
+    button('PLAY AGAIN', 940);
+  }
+
+  // ===== Main loop =====
+  var last = 0;
+  function frame(ts) {
+    var t = ts / 1000;
+    var dt = Math.min(t - last, 0.033); if (!(dt > 0)) dt = 0.016;
+    last = t;
+    update(dt);
+
+    // base transform already includes dpr (coordinate system = CSS pixels); do not multiply dpr again in translate/scale
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#0d0a18'; ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    ctx.save();
+    ctx.translate(offX, offY);
+    ctx.scale(scale, scale);
+    if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+
+    drawBackground(t);
+    for (var i = 0; i < prizes.length; i++) drawPrize(prizes[i], t);
+    drawAimGuide();
+    if (flyRing) drawRing(flyRing.x, flyRing.y, 30, flyRing.rot);
+    for (var j = 0; j < particles.length; j++) {
+      var p = particles[j];
+      ctx.globalAlpha = Math.max(0, 1 - p.age / p.life);
+      ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    for (var k = 0; k < floaters.length; k++) {
+      var f = floaters[k];
+      ctx.globalAlpha = Math.max(0, 1 - f.age / f.life);
+      text(f.text, f.x, f.y, f.big ? 34 : 20, f.color, 'center', '700');
+    }
+    ctx.globalAlpha = 1;
+    if (flash > 0) { ctx.fillStyle = 'rgba(255,240,190,' + (flash * 0.22) + ')'; ctx.fillRect(0, 0, VW, VH); }
+    drawHUD(t);
+    if (state === STATE.MENU) drawMenu(t);
+    else if (state === STATE.OVER) drawOver(t);
+
+    ctx.restore();
+    requestAnimationFrame(frame);
+  }
+  buildPrizes();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
