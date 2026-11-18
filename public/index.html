@@ -18,21 +18,23 @@
 <meta property="og:site_name" content="李晓阳 · 作品集">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:url" content="https://li-xiaoyang-portfolio.onrender.com/">
-<meta property="og:title" content="李晓阳 · 会前端的 AI 应用工程师">
-<meta property="og:description" content="Agentic RAG 知识库、自主编码 Agent 运行时、AI 全栈交付。每个项目写明做了什么、数字怎么来的、哪里还没做到。">
+<meta property="og:title" content="李晓阳 · AI 应用开发工程师">
+<meta property="og:description" content="Agentic RAG 知识库、自主编码 Agent 运行时、AI 全栈交付。会前端的 AI 应用工程师，4 年联想全球电商工程底子。每个项目写明做了什么、数字怎么来的、哪里还没做到。">
 <meta property="og:image" content="https://li-xiaoyang-portfolio.onrender.com/assets/og-cover.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="李晓阳 · 会前端的 AI 应用工程师作品集封面">
+<meta property="og:image:alt" content="李晓阳 · AI 应用开发工程师作品集封面">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="李晓阳 · 会前端的 AI 应用工程师">
-<meta name="twitter:description" content="Agentic RAG 知识库、自主编码 Agent 运行时、AI 全栈交付。每个项目写明做了什么、数字怎么来的、哪里还没做到。">
+<meta name="twitter:title" content="李晓阳 · AI 应用开发工程师">
+<meta name="twitter:description" content="Agentic RAG 知识库、自主编码 Agent 运行时、AI 全栈交付。会前端的 AI 应用工程师，4 年联想全球电商工程底子。每个项目写明做了什么、数字怎么来的、哪里还没做到。">
 <meta name="twitter:image" content="https://li-xiaoyang-portfolio.onrender.com/assets/og-cover.png">
 
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+<div class="read-progress" id="readProgress" aria-hidden="true"></div>
 
 <a class="skip" href="#main">跳到主要内容</a>
 
@@ -51,33 +53,34 @@
   <!-- ===== Hero ===== -->
   <section class="hero" id="top">
     <p class="eyebrow">AI APPLICATION ENGINEER · 2026</p>
-    <h1>会前端的 <em>AI 应用工程师</em></h1>
+    <h1>AI 应用开发工程师</h1>
+    <p class="role-sub">会前端的 AI 应用工程师 <span class="dot-sep">·</span> 4 年联想全球电商工程底子</p>
     <p class="role-line">求职方向：AI 应用开发工程师 · Agent 开发 · AI 全栈开发</p>
-    <p class="hero-copy">近 4 年联想全球电商前端开发，1 年日本全栈交付，山梨大学硕士（深度学习方向）。现在专注 AI 应用与 Agent 工程：从检索链路、工具调用到评测与运行边界，每个结论都有可复跑的脚本和可核对的数字。</p>
+    <p class="hero-copy">从检索链路、Agent 工具调用到评测与运行边界，做能落地、能回源验证的 AI 应用。深度学习硕士，近 4 年联想全球电商前端开发 + 1 年日本全栈交付；架构与技术取舍由我主导，实现过程中与 AI 协作。每个结论都附可复跑脚本和可核对数字。</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#work">查看作品 <span aria-hidden="true">→</span></a>
       <a class="btn" href="Li-Xiaoyang-AI-Engineer-Resume.pdf" download>下载简历 PDF</a>
       <a class="btn" href="https://github.com/zuishuailxy" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </div>
     <dl class="stats">
-      <div><dt>4 年</dt><dd>联想全球电商前端</dd></div>
-      <div><dt>2 个</dt><dd>自研 AI 项目 · 均已开源</dd></div>
-      <div><dt>206 条</dt><dd>RAG 离线评测用例</dd></div>
-      <div><dt>265 个</dt><dd>tiny-claw 单元测试</dd></div>
+      <div><dt>2 个</dt><dd>开源 AI 核心系统</dd></div>
+      <div><dt>206 条</dt><dd>RAG 离线评测样本</dd></div>
+      <div><dt>58 条</dt><dd>生成质量评测（含拒答）</dd></div>
+      <div><dt>265 个</dt><dd>Agent 离线测试</dd></div>
     </dl>
     <p class="hero-foot">成都 · 日语 JLPT N1 · 可立即到岗</p>
   </section>
 
   <!-- ===== 作品 ===== -->
   <section class="section" id="work">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="eyebrow">SELECTED WORK</p>
       <h2>四个作品，四条证据链</h2>
       <p class="section-note">每个项目都写明「做了什么」「数字怎么来的」「哪里还没做到」。架构与取舍由我主导，实现过程中与 AI 协作。</p>
     </div>
 
     <!-- 01 my-rag -->
-    <article class="project" id="my-rag">
+    <article class="project reveal" id="my-rag">
       <div class="project-head">
         <span class="num">01</span>
         <div>
@@ -102,8 +105,14 @@
           <h4>可验证结果</h4>
           <ul>
             <li><strong>206 条</strong>离线评测集（检索 148 + 生成 58），另有 19 条图谱专项。</li>
-            <li>51 条近义改写难例四级消融，hit@1：纯关键词 BM25 <strong>0.706</strong> → + 向量召回 0.804 → + 兜底门控 0.824 → + rerank <strong>0.941</strong>。</li>
+            <li>51 条近义改写难例四级逐级对比，hit@1：纯关键词 BM25 <strong>0.706</strong> → + 向量召回 0.804 → + 兜底门控 0.824 → + rerank <strong>0.941</strong>。</li>
             <li>20 并发出现 5 个失败、p50 2.5s → 31s，定位到 FastAPI 生成器依赖持有数据库会话；改短生命周期会话后<strong>100 并发零失败</strong>（单机压测、Mock 模型服务）。</li>
+          </ul>
+          <h4 class="sub-h4">可靠性与失败处理</h4>
+          <ul>
+            <li>生成侧 <strong>58 条</strong>评测（51 可答 + 7 不可答）：不可回答问题<strong>正确拒答 7/7</strong>，引用越界率 0、引用准确率 0.98、忠贞度 0.997。</li>
+            <li>外部依赖降级：ES / Neo4j / Redis 不可用时按 fail-open 降级，不把限流和依赖变成新的单点故障。</li>
+            <li>兜底门控在组合故障下曾把召回清零（0.94 → 0.00），靠降级告警发现并修掉——记录为"可观测性发现刚写错的代码"案例。</li>
           </ul>
         </div>
       </div>
@@ -114,7 +123,7 @@
     </article>
 
     <!-- 02 tiny-claw -->
-    <article class="project" id="tiny-claw">
+    <article class="project reveal" id="tiny-claw">
       <div class="project-head">
         <span class="num">02</span>
         <div>
@@ -151,7 +160,7 @@
     </article>
 
     <!-- 03 student-admin-system -->
-    <article class="project" id="student-admin">
+    <article class="project reveal" id="student-admin">
       <div class="project-head">
         <span class="num">03</span>
         <div>
@@ -191,7 +200,7 @@
     </article>
 
     <!-- 04 leo-api -->
-    <article class="project" id="leo-api">
+    <article class="project reveal" id="leo-api">
       <div class="project-head">
         <span class="num">04</span>
         <div>
@@ -229,23 +238,23 @@
 
   <!-- ===== 能力 ===== -->
   <section class="section" id="capability">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="eyebrow">WHAT I DO</p>
       <h2>能力概览</h2>
     </div>
 
     <div class="capabilities">
-      <div class="capability">
+      <div class="capability reveal">
         <span class="num">01</span>
         <h3>AI 应用与 Agent</h3>
         <p>RAG 全链路、Agent Loop、工具调用与权限边界、上下文压缩、离线评测与可观测。结论优先用脚本跑出来，而不是凭感觉。</p>
       </div>
-      <div class="capability">
+      <div class="capability reveal">
         <span class="num">02</span>
         <h3>全栈交付</h3>
         <p>Python / FastAPI 与 Node / Express 双栈，PostgreSQL、Redis、Elasticsearch、Neo4j 数据层，Docker Compose 编排与部署。</p>
       </div>
-      <div class="capability">
+      <div class="capability reveal">
         <span class="num">03</span>
         <h3>前端工程</h3>
         <p>近 4 年联想全球电商前端，Vue 3 / Vue 2 / React 19 + TypeScript，SSE 流式界面、多端适配、Web Worker 与无障碍。</p>
@@ -256,7 +265,7 @@
 
   <!-- ===== 履历 ===== -->
   <section class="section" id="career">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="eyebrow">EXPERIENCE</p>
       <h2>履历与教育</h2>
     </div>
@@ -308,7 +317,7 @@
 
   <!-- ===== 联系 ===== -->
   <section class="section contact" id="contact">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="eyebrow">CONTACT</p>
       <h2>聊聊机会</h2>
       <p class="section-note">成都，可立即到岗。目标岗位：AI 应用开发 / Agent 开发 / AI 全栈开发。</p>

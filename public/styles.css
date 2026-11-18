@@ -3,6 +3,34 @@
    排版节奏参考 jinnstudio：大字号 Hero、编号能力区、ch 行宽、大留白
    零依赖、无外部字体请求（网页字体不受简历 PDF 的康熙部首限制） */
 
+/* ===== 动效基础（尊重系统减动偏好，末尾有 reduce 兜底） ===== */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* 首屏元素依次入场：用 CSS 变量控制延迟，避免 JS 闪烁 */
+.hero > * { animation: riseIn .72s cubic-bezier(.2,.7,.2,1) both; }
+.hero > .eyebrow      { animation-delay: .04s; }
+.hero > h1            { animation-delay: .10s; }
+.hero > .role-sub     { animation-delay: .18s; }
+.hero > .role-line    { animation-delay: .24s; }
+.hero > .hero-copy    { animation-delay: .30s; }
+.hero > .hero-actions { animation-delay: .38s; }
+.hero > .stats        { animation-delay: .46s; }
+.hero > .hero-foot    { animation-delay: .54s; }
+
+/* 滚动进入视口的元素：JS 加 .is-visible。
+   用 .js 前缀兜底——JS 未执行时内容照常可见，不会因动效丢失正文 */
+.js .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.js .reveal.is-visible { opacity: 1; transform: none; }
+
+/* 顶部阅读进度条 */
+.read-progress {
+  position: fixed; top: 0; left: 0; height: 2px; width: 0;
+  background: var(--accent); z-index: 60; pointer-events: none;
+  transition: width .08s linear;
+}
+
 :root {
   --ink: #0b0f15;
   --ink-2: #141922;
@@ -78,33 +106,34 @@ code {
   color: var(--accent);
   font-size: 12px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
 }
-.section-head { margin-bottom: 48px; max-width: 46ch; }
+.section-head { margin-bottom: 48px; max-width: min(100%, 72ch); }
 .section-head h2 { font-size: clamp(30px, 4.2vw, 44px); letter-spacing: -.02em; }
-.section-note { color: var(--muted); font-size: 15px; margin: 18px 0 0; max-width: 62ch; }
+.section-note { color: var(--muted); font-size: 15px; margin: 18px 0 0; max-width: min(100%, 84ch); }
 
 /* ===== Hero ===== */
 .hero h1 {
   font-size: clamp(40px, 7.2vw, 76px);
   letter-spacing: -.035em;
   font-weight: 700;
-  max-width: 16ch;
+  max-width: 18ch;
 }
-.hero h1 em {
-  font-style: normal;
-  color: var(--accent);
-  border-bottom: 3px solid var(--accent);
-  padding-bottom: .06em;
-  white-space: nowrap;   /* 窄屏不要把「工程师」拆到两行 */
+.role-sub {
+  margin: 18px 0 0;
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: -.01em;
 }
+.role-sub .dot-sep { color: var(--line); margin: 0 6px; }
 .role-line {
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   font-size: 15px; font-weight: 600; color: var(--accent);
   letter-spacing: .02em;
 }
 .role-line + .hero-copy { margin-top: 16px; }
 .hero-copy {
   margin: 30px 0 0;
-  max-width: 60ch;
+  max-width: min(100%, 80ch);
   font-size: clamp(16px, 1.5vw, 18px);
   color: var(--ink-2);
 }
@@ -155,7 +184,7 @@ code {
 .project-meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
 .lede {
   margin: 22px 0 0;
-  max-width: 68ch;
+  width: 100%;
   font-size: 16px;
   color: var(--ink-2);
 }
@@ -167,6 +196,7 @@ code {
   font-size: 13px; letter-spacing: .1em; color: var(--muted);
   text-transform: uppercase; margin-bottom: 12px;
 }
+.project-grid h4.sub-h4 { margin-top: 26px; }
 .project-grid ul { margin: 0; padding-left: 18px; }
 .project-grid li { margin-bottom: 10px; font-size: 15px; }
 .project-grid li::marker { color: var(--accent); }
@@ -211,7 +241,7 @@ code {
 }
 .capability .num { padding-top: 0; }
 .capability h3 { font-size: 19px; }
-.capability p { margin: 0; font-size: 14px; color: var(--muted); max-width: 34ch; }
+.capability p { margin: 0; font-size: 14px; color: var(--muted); max-width: 100%; }
 /* ===== 履历 ===== */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li {
@@ -221,7 +251,7 @@ code {
 .timeline li:last-child { border-bottom: 1px solid var(--line); }
 .timeline .when { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; padding-top: 3px; }
 .timeline h3 { font-size: 18px; margin-bottom: 8px; }
-.timeline p { margin: 0; font-size: 14px; color: var(--muted); max-width: 72ch; }
+.timeline p { margin: 0; font-size: 14px; color: var(--muted); max-width: 100%; }
 
 /* ===== 联系 / 页脚 ===== */
 .contact { text-align: left; }
@@ -256,4 +286,7 @@ code {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .btn { transition: none; }
+  .hero > * { animation: none !important; }
+  .js .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .read-progress { display: none; }
 }

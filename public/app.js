@@ -1,7 +1,11 @@
 /* 李晓阳 · 作品集脚本
-   只做两件事：① 按 MEDIA 配置挂载图片 / 视频 ② 页脚年份。
-   没有素材的项目会把整个媒体块移除，页面不留空框、不放假占位图。
+   ① 按 MEDIA 配置挂载图片 / 视频 ② 页脚年份 ③ 滚动动效 / 阅读进度条
+   无素材的项目会把整个媒体块移除，页面不留空框、不放假占位图。
    视频优先用外链；本地小体积演示视频（<1MB）可放 assets/showcase。 */
+
+// 先标记 JS 可用：CSS 里的 .js .reveal 才会生效；
+// JS 被拦时 .reveal 不隐藏，正文照常可见（求职站不能因动效丢内容）。
+document.documentElement.classList.add("js");
 
 const MEDIA = {
   "my-rag": {
@@ -129,3 +133,40 @@ renderMedia();
 
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+
+/* ===== 滚动动效：进入视口淡入 + 顶部阅读进度条 ===== */
+(function setupMotion() {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reveals = Array.from(document.querySelectorAll(".reveal"));
+
+  if (reduce || !("IntersectionObserver" in window)) {
+    // 减动偏好或不支持：直接全部显示，不做位移动画
+    reveals.forEach((el) => el.classList.add("is-visible"));
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    reveals.forEach((el) => io.observe(el));
+  }
+
+  // 顶部阅读进度条（用 requestAnimationFrame 节流）
+  const bar = document.getElementById("readProgress");
+  if (!bar) return;
+  let ticking = false;
+  const update = () => {
+    const h = document.documentElement;
+    const scrollable = h.scrollHeight - h.clientHeight;
+    const pct = scrollable > 0 ? (h.scrollTop / scrollable) * 100 : 0;
+    bar.style.width = pct + "%";
+    ticking = false;
+  };
+  window.addEventListener("scroll", () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+})();
