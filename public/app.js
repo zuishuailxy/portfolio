@@ -21,7 +21,17 @@ const MEDIA = {
     videoFirst: false,   // 先给架构图，再放终端演示录屏
     caption: "真实运行录屏（日志回放）：8 轮工具调用、失败重试、人工审批边界；演示语料"
   },
-  "student-admin":  { image: "", video: "", embed: "", caption: "" },
+  "student-admin": {
+    video: "assets/showcase/student-admin-demo.mp4",
+    gallery: [
+      { src: "assets/showcase/student-admin-dashboard.webp", caption: "管理员工作台：逾期跟进优先、今日试听排期，一眼看清待办" },
+      { src: "assets/showcase/student-admin-students.webp", caption: "学生列表：全局可读、按负责人隔离写权限，状态与待跟进一目了然" },
+      { src: "assets/showcase/student-admin-detail.webp", caption: "学生详情：时间线 + AI 试听摘要（确定性降级），顾问跟进有据可依" },
+      { src: "assets/showcase/student-admin-teacher.webp", caption: "老师工作台：只看自己的试听安排与待提交结果" },
+      { src: "assets/showcase/student-admin-result.webp", caption: "试听结果：出勤、参与度、反馈与 AI 摘要沉淀，形成跟进话术" }
+    ],
+    caption: "线上演示环境录屏与界面截图（seed 演示数据，非真实学员信息）"
+  },
   "leo-api":        { image: "", video: "", embed: "", caption: "" }
 };
 
