@@ -39,6 +39,63 @@ const MEDIA = {
   "leo-api":        { image: "", video: "", embed: "", caption: "" }
 };
 
+/* 图片放大灯箱：点击截图放大到接近原图，支持左右切换 / Esc / 点击遮罩关闭 */
+function openLightbox(src, caption, gallery, index) {
+  let box = document.getElementById("lightbox");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "lightbox";
+    box.className = "lightbox";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.innerHTML =
+      '<button class="lb-close" type="button" aria-label="关闭">×</button>' +
+      '<button class="lb-nav lb-prev" type="button" aria-label="上一张">‹</button>' +
+      '<figure class="lb-figure"><img class="lb-img" alt=""><figcaption class="lb-cap"></figcaption></figure>' +
+      '<button class="lb-nav lb-next" type="button" aria-label="下一张">›</button>';
+    document.body.appendChild(box);
+
+    const close = () => { box.classList.remove("open"); document.body.style.overflow = ""; };
+    box.addEventListener("click", (e) => { if (e.target === box) close(); });
+    box.querySelector(".lb-close").addEventListener("click", close);
+    document.addEventListener("keydown", (e) => {
+      if (!box.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowLeft") box.querySelector(".lb-prev").click();
+      if (e.key === "ArrowRight") box.querySelector(".lb-next").click();
+    });
+  }
+
+  const hasNav = Array.isArray(gallery) && gallery.length > 1;
+  const img = box.querySelector(".lb-img");
+  const cap = box.querySelector(".lb-cap");
+  const prev = box.querySelector(".lb-prev");
+  const next = box.querySelector(".lb-next");
+  let cur = index || 0;
+
+  const show = (i) => {
+    cur = (i + gallery.length) % gallery.length;
+    const g = gallery[cur];
+    img.src = g.src;
+    img.alt = g.caption || "项目界面截图";
+    cap.textContent = g.caption || "";
+  };
+  if (hasNav) {
+    img.src = gallery[cur].src;
+    img.alt = gallery[cur].caption || "项目界面截图";
+    cap.textContent = gallery[cur].caption || "";
+    prev.style.display = ""; next.style.display = "";
+    const prevHandler = () => show(cur - 1);
+    const nextHandler = () => show(cur + 1);
+    prev.onclick = prevHandler; next.onclick = nextHandler;
+  } else {
+    img.src = src; img.alt = caption; cap.textContent = caption;
+    prev.style.display = "none"; next.style.display = "none";
+  }
+  box.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
 function renderMedia() {
   const makeCaption = (text) => {
     const cap = document.createElement("figcaption");
@@ -85,32 +142,69 @@ function renderMedia() {
     };
 
     // 图片块：多图画廊 / 单图（旧格式）
+    // 第一张作主图常显，其余折叠；所有图点击可放大
     const buildGallery = () => {
       if (hasGallery) {
-        const grid = document.createElement("div");
-        grid.className = "media-gallery";
-        item.gallery.forEach((g) => {
+        const wrap = document.createElement("div");
+        wrap.className = "media-gallery";
+
+        const makeFig = (g, idx) => {
           const fig = document.createElement("figure");
-          fig.className = "media-figure";
+          fig.className = "media-figure zoomable";
+          fig.tabIndex = 0;
+          fig.setAttribute("role", "button");
+          fig.setAttribute("aria-label", (g.caption || "项目界面截图") + "（点击放大）");
           const img = document.createElement("img");
           img.src = g.src;
           img.alt = g.caption || "项目界面截图";
-          img.loading = "lazy";
+          img.loading = idx === 0 ? "eager" : "lazy";
           fig.appendChild(img);
           if (g.caption) fig.appendChild(makeCaption(g.caption));
-          grid.appendChild(fig);
-        });
-        return grid;
+          // 点击 / 回车放大
+          const open = () => openLightbox(g.src, g.caption || "项目界面截图", item.gallery, idx);
+          fig.addEventListener("click", open);
+          fig.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+          });
+          return fig;
+        };
+
+        if (item.gallery.length === 1) {
+          wrap.appendChild(makeFig(item.gallery[0], 0));
+          return wrap;
+        }
+
+        // 主图常显
+        wrap.appendChild(makeFig(item.gallery[0], 0));
+        // 其余折叠
+        const details = document.createElement("details");
+        details.className = "gallery-more";
+        const summary = document.createElement("summary");
+        summary.textContent = "展开查看其余 " + (item.gallery.length - 1) + " 张截图 ▾";
+        details.appendChild(summary);
+        const rest = document.createElement("div");
+        rest.className = "media-gallery gallery-rest";
+        item.gallery.slice(1).forEach((g, i) => rest.appendChild(makeFig(g, i + 1)));
+        details.appendChild(rest);
+        wrap.appendChild(details);
+        return wrap;
       }
       if (item.image && !item.embed && !item.video) {
         const figure = document.createElement("figure");
-        figure.className = "media-figure";
+        figure.className = "media-figure zoomable";
+        figure.tabIndex = 0;
+        figure.setAttribute("role", "button");
         const img = document.createElement("img");
         img.src = item.image;
         img.alt = item.caption || "项目架构图或界面截图";
         img.loading = "lazy";
         figure.appendChild(img);
         if (item.caption) figure.appendChild(makeCaption(item.caption));
+        const open = () => openLightbox(item.image, item.caption || "项目架构图", null, 0);
+        figure.addEventListener("click", open);
+        figure.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+        });
         return figure;
       }
       return null;
@@ -143,6 +237,8 @@ if (yearEl) yearEl.textContent = String(new Date().getFullYear());
     // 减动偏好或不支持：直接全部显示，不做位移动画
     reveals.forEach((el) => el.classList.add("is-visible"));
   } else {
+    // 只用 rootMargin 提前触发，threshold=0 只要沾到视口就显示；
+    // 高卡片（数千 px）用 threshold>0 会因始终达不到比例而卡住不触发。
     const io = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -150,8 +246,14 @@ if (yearEl) yearEl.textContent = String(new Date().getFullYear());
           io.unobserve(entry.target);
         }
       });
-    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    }, { rootMargin: "0px 0px 5% 0px", threshold: 0 });
     reveals.forEach((el) => io.observe(el));
+
+    // 兜底保险：3 秒后任何仍未触发的 reveal 无条件显示。
+    // 求职站绝不能因动效让内容永久隐藏（锚点跳转/长截图/异常布局都测过）。
+    window.setTimeout(() => {
+      reveals.forEach((el) => el.classList.add("is-visible"));
+    }, 3000);
   }
 
   // 顶部阅读进度条（用 requestAnimationFrame 节流）

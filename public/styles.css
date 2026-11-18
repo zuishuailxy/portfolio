@@ -226,11 +226,70 @@ code {
   border: 1px solid var(--line); border-radius: 8px;
   background: var(--surface);
 }
-.media-figure video { max-height: 520px; }
-.media-figure iframe { aspect-ratio: 16 / 9; height: auto; max-height: 560px; }
+/* 图片限高：长截图等比缩到框内，两侧浅底留白；点灯箱看原尺寸 */
+.media-figure img { max-height: 440px; object-fit: contain; }
+.media-figure video { max-height: 400px; background: #0b0f15; }
+.media-figure iframe { aspect-ratio: 16 / 9; height: auto; max-height: 480px; }
 .media-figure figcaption { margin-top: 9px; font-size: 13px; color: var(--muted); }
 .media-gallery { display: grid; gap: 20px; margin-top: 22px; }
 .media-gallery .media-figure img { background: var(--surface); }
+/* 截图可点击放大：光标 + 悬浮微提示 */
+.zoomable { cursor: zoom-in; }
+.zoomable img { transition: box-shadow .2s ease; }
+.zoomable:hover img, .zoomable:focus-visible img {
+  box-shadow: 0 6px 24px rgba(11,15,21,.16);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* 其余截图折叠 */
+.gallery-more { margin-top: 18px; }
+.gallery-more summary {
+  cursor: pointer; display: inline-flex; align-items: center;
+  min-height: 44px; padding: 0 14px;
+  font-size: 14px; font-weight: 600; color: var(--accent);
+  border: 1px solid var(--line); border-radius: 6px;
+  list-style: none; user-select: none;
+}
+.gallery-more summary::-webkit-details-marker { display: none; }
+.gallery-more summary:hover { border-color: var(--accent); background: var(--surface); }
+.gallery-more[open] summary { margin-bottom: 20px; }
+.gallery-rest { margin-top: 0; }
+
+/* ===== 灯箱（深色遮罩，截图本身保持原色） ===== */
+.lightbox {
+  position: fixed; inset: 0; z-index: 100;
+  display: none; align-items: center; justify-content: center;
+  gap: 12px; padding: 32px 20px;
+  background: rgba(9,13,20,.92);
+  backdrop-filter: blur(4px);
+}
+.lightbox.open { display: flex; }
+.lb-figure { margin: 0; max-width: 92vw; max-height: 88vh; display: flex; flex-direction: column; align-items: center; }
+.lb-img {
+  display: block; max-width: 92vw; max-height: 80vh;
+  width: auto; height: auto; object-fit: contain;
+  border-radius: 6px; background: #fff;
+}
+.lb-cap { color: #e6ecf5; font-size: 14px; margin-top: 14px; text-align: center; max-width: 80ch; }
+.lb-close {
+  position: absolute; top: 16px; right: 22px;
+  width: 44px; height: 44px; line-height: 1;
+  font-size: 32px; color: #fff; background: transparent;
+  border: 0; cursor: pointer;
+}
+.lb-nav {
+  flex: none; width: 48px; height: 48px;
+  font-size: 34px; line-height: 1; color: #fff;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+  border-radius: 50%; cursor: pointer;
+}
+.lb-nav:hover { background: rgba(255,255,255,.2); }
+@media (max-width: 600px) {
+  .lightbox { padding: 48px 8px 20px; gap: 4px; }
+  .lb-img { max-width: 96vw; max-height: 72vh; }
+  .lb-nav { width: 40px; height: 40px; font-size: 26px; }
+  .lb-cap { font-size: 13px; }
+}
 
 /* ===== 能力 ===== */
 .capabilities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
@@ -289,4 +348,10 @@ code {
   .hero > * { animation: none !important; }
   .js .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
   .read-progress { display: none; }
+}
+/* 打印 / 导出 PDF 时强制显示全部内容：打印场景不触发滚动，IO 不会 reveal */
+@media print {
+  .js .reveal { opacity: 1 !important; transform: none !important; }
+  .read-progress, .nav { display: none !important; }
+  .hero > * { animation: none !important; }
 }
