@@ -13,12 +13,25 @@ const MEDIA = {
     ],
     caption: "真实演示环境录屏与界面截图（演示语料，非生产数据）"
   },
-  "tiny-claw":      { image: "", video: "", embed: "", caption: "" },
+  "tiny-claw": {
+    video: "assets/showcase/tiny-claw-demo.mp4",
+    gallery: [
+      { src: "assets/showcase/tiny-claw-architecture.webp", caption: "四层架构：上下文工程 / 核心引擎 / 工具与执行 / 入口交互" }
+    ],
+    videoFirst: false,   // 先给架构图，再放终端演示录屏
+    caption: "真实运行录屏（日志回放）：8 轮工具调用、失败重试、人工审批边界；演示语料"
+  },
   "student-admin":  { image: "", video: "", embed: "", caption: "" },
   "leo-api":        { image: "", video: "", embed: "", caption: "" }
 };
 
 function renderMedia() {
+  const makeCaption = (text) => {
+    const cap = document.createElement("figcaption");
+    cap.textContent = text;
+    return cap;
+  };
+
   document.querySelectorAll(".media-slot").forEach((slot) => {
     const key = slot.dataset.media;
     const item = MEDIA[key];
@@ -28,8 +41,9 @@ function renderMedia() {
       return;
     }
 
-    // 视频优先（带封面用 image 或 gallery 第一张做 poster）
-    if (item.embed || item.video) {
+    // 视频块（含 iframe 外链）
+    const buildVideo = () => {
+      if (!item.embed && !item.video) return null;
       const figure = document.createElement("figure");
       figure.className = "media-figure";
       if (item.embed) {
@@ -47,54 +61,56 @@ function renderMedia() {
         video.controls = true;
         video.preload = "metadata";
         video.playsInline = true;
-        const poster = item.image || (hasGallery ? item.gallery[0].src : "");
-        if (poster) video.poster = poster;
+        // 封面：显式 image 才用；gallery 图比例未必适合，默认不拿来当 poster
+        if (item.image) video.poster = item.image;
         video.setAttribute("aria-label", item.caption || "项目演示录屏");
         figure.appendChild(video);
       }
-      if (item.caption) {
-        const cap = document.createElement("figcaption");
-        cap.textContent = item.caption;
-        figure.appendChild(cap);
-      }
-      slot.appendChild(figure);
-    }
+      if (item.caption) figure.appendChild(makeCaption(item.caption));
+      return figure;
+    };
 
-    // 多图画廊
-    if (hasGallery) {
-      const grid = document.createElement("div");
-      grid.className = "media-gallery";
-      item.gallery.forEach((g) => {
-        const fig = document.createElement("figure");
-        fig.className = "media-figure";
-        const img = document.createElement("img");
-        img.src = g.src;
-        img.alt = g.caption || "项目界面截图";
-        img.loading = "lazy";
-        fig.appendChild(img);
-        if (g.caption) {
-          const cap = document.createElement("figcaption");
-          cap.textContent = g.caption;
-          fig.appendChild(cap);
-        }
-        grid.appendChild(fig);
-      });
-      slot.appendChild(grid);
-    } else if (!item.embed && !item.video && item.image) {
-      // 单图（旧格式兼容）
-      const figure = document.createElement("figure");
-      figure.className = "media-figure";
-      const img = document.createElement("img");
-      img.src = item.image;
-      img.alt = item.caption || "项目架构图或界面截图";
-      img.loading = "lazy";
-      figure.appendChild(img);
-      if (item.caption) {
-        const cap = document.createElement("figcaption");
-        cap.textContent = item.caption;
-        figure.appendChild(cap);
+    // 图片块：多图画廊 / 单图（旧格式）
+    const buildGallery = () => {
+      if (hasGallery) {
+        const grid = document.createElement("div");
+        grid.className = "media-gallery";
+        item.gallery.forEach((g) => {
+          const fig = document.createElement("figure");
+          fig.className = "media-figure";
+          const img = document.createElement("img");
+          img.src = g.src;
+          img.alt = g.caption || "项目界面截图";
+          img.loading = "lazy";
+          fig.appendChild(img);
+          if (g.caption) fig.appendChild(makeCaption(g.caption));
+          grid.appendChild(fig);
+        });
+        return grid;
       }
-      slot.appendChild(figure);
+      if (item.image && !item.embed && !item.video) {
+        const figure = document.createElement("figure");
+        figure.className = "media-figure";
+        const img = document.createElement("img");
+        img.src = item.image;
+        img.alt = item.caption || "项目架构图或界面截图";
+        img.loading = "lazy";
+        figure.appendChild(img);
+        if (item.caption) figure.appendChild(makeCaption(item.caption));
+        return figure;
+      }
+      return null;
+    };
+
+    // 默认视频在前；videoFirst:false 时图在前（如 tiny-claw 先给架构图）
+    const videoBlock = buildVideo();
+    const galleryBlock = buildGallery();
+    if (item.videoFirst === false) {
+      if (galleryBlock) slot.appendChild(galleryBlock);
+      if (videoBlock) slot.appendChild(videoBlock);
+    } else {
+      if (videoBlock) slot.appendChild(videoBlock);
+      if (galleryBlock) slot.appendChild(galleryBlock);
     }
   });
 }
