@@ -199,6 +199,8 @@ code {
 .media-figure video { max-height: 520px; }
 .media-figure iframe { aspect-ratio: 16 / 9; height: auto; max-height: 560px; }
 .media-figure figcaption { margin-top: 9px; font-size: 13px; color: var(--muted); }
+.media-gallery { display: grid; gap: 20px; margin-top: 22px; }
+.media-gallery .media-figure img { background: var(--surface); }
 
 /* ===== 能力 ===== */
 .capabilities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
