@@ -199,40 +199,41 @@
       </p>
     </article>
 
-    <!-- 04 leo-api -->
-    <article class="project reveal" id="leo-api">
+    <!-- 04 bookAgents -->
+    <article class="project reveal" id="book-agents">
       <div class="project-head">
         <span class="num">04</span>
         <div>
-          <h3>开源全栈 API <span class="en">· leo-api</span></h3>
-          <p class="project-meta">Node.js 佐证 · Express 4 / Sequelize / MySQL / Redis</p>
+          <h3>多 Agent 长文本创作系统 <span class="en">· bookAgents</span></h3>
+          <p class="project-meta">多 Agent 编排 · 2026.08 – 2026.09 · Python / LangGraph / FastAPI</p>
         </div>
       </div>
-      <p class="lede">leo-api 是一套基于 Node.js 的开源全栈 API，用于在本地跑通接口、数据与实时推送的后端链路。后端以 Express 4 直接依赖搭建，Sequelize 操作 MySQL，22 个迁移管理表结构演进，路由按前台、管理端与第三方入口分层；JWT 三层鉴权与 SSE 通道覆盖权限和消息推送。架构与取舍由我主导，实现含 AI 协作。项目自建开源，Docker Compose 本地启动，无自动化测试，未上生产环境。</p>
+      <p class="lede">面向长篇小说创作的多 Agent 流水线：细纲 → 写作 → 审校打分 → 定向重写 → 定稿，全程由状态机驱动。设定、人物、伏笔、时间线作为结构化知识资产被各 Agent 共享并自动回写，解决长文本跨章一致性问题。</p>
 
-      <div class="media-slot" data-media="leo-api"></div>
+      <div class="media-slot" data-media="book-agents"></div>
 
       <div class="project-grid">
         <div>
           <h4>关键设计</h4>
           <ul>
-            <li>跨进程 SSE：连接分散在多个进程时单进程广播会丢消息，故用 Redis Pub/Sub 做公共总线，配独立订阅连接、并发锁、25s 心跳与关闭清理。</li>
-            <li>JWT 三层鉴权：用户、管理员（role=100）与 SSE 分离，实时通道不复用高权限令牌，兼容原生 EventSource 的 <code>?token=</code>。</li>
-            <li>22 个迁移、10 个模型，表结构演进可版本化回放与回滚。</li>
+            <li>章节状态机六态（DRAFT / WRITING / REVIEWING / REVISION / FINAL / NEEDS_REWRITE），不达标自动重写、崩溃后按 checkpoint 断点续跑，准确率优先于无人值守。</li>
+            <li>写作与审校分用不同模型与温度（生成 0.9、审校 0.1–0.3），避免模型自评偏袒；审校含 AI 味检测，默认最多重写 2 次，阈值与轮次可配置。</li>
+            <li>伏笔账本 / 时间线 / 层级摘要树作为共享上下文，写作时按「前章摘要 + 卷/全书及更早章节摘要」分层注入，不把全书塞进窗口；四档人机确认粒度可调。</li>
           </ul>
         </div>
         <div>
-          <h4>项目价值</h4>
+          <h4>可验证结果</h4>
           <ul>
-            <li>与 Python / FastAPI 两套 AI 项目形成 Node.js + Python 双栈证据。</li>
-            <li>Express 为 <code>~4.16.1</code> 直接依赖，可正面说明对 Express 的熟悉程度。</li>
+            <li><strong>21 个</strong>离线单测全部通过（约 2 s），覆盖状态机、知识回写与流水线闭环。</li>
+            <li>真实运行 32 章定稿 / 目标 100 章、累计 <strong>23.7 万字</strong>，平均审校分 <strong>89.2</strong>，全部章节带细纲与摘要；Web UI 可浏览进度、状态与消耗。</li>
+            <li>架构设计与命令链完整落地：init / outline / run / book / reader 全流程可复现，含 SQLite checkpoint 与独立审校 / 核查模块。</li>
           </ul>
         </div>
       </div>
 
-      <p class="boundary"><strong>已知边界</strong>：自建开源项目，Docker Compose 本地起 MySQL，无自动化测试，非生产运行，仅作本地演示与能力佐证。</p>
-      <p class="tags"><span>Express 4</span><span>Sequelize</span><span>MySQL</span><span>Redis Pub/Sub</span><span>SSE</span><span>Docker Compose</span></p>
-      <p class="project-links"><a href="https://github.com/zuishuailxy/KnowledgeBase/tree/master/full-stack/leo-api" target="_blank" rel="noopener noreferrer">开源代码 →</a></p>
+      <p class="boundary"><strong>已知边界</strong>：质量把关靠审校打分与人工通读，非文学同行评审；token 费用统计依赖本地日志、仓库内为空；仅本机 Web UI，无在线演示；创作粒度与节奏需人工定夺，系统不替代作者决策。</p>
+      <p class="tags"><span>Python</span><span>LangGraph</span><span>FastAPI</span><span>SQLite</span><span>状态机</span><span>多 Agent</span><span>pytest</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/bookAgents" target="_blank" rel="noopener noreferrer">开源代码与架构设计 →</a></p>
     </article>
 
     <!-- 05 local-asr -->
@@ -272,41 +273,40 @@
       <p class="project-links"><a href="https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application" target="_blank" rel="noopener noreferrer">开源代码与文档 →</a></p>
     </article>
 
-    <!-- 06 bookAgents -->
-    <article class="project reveal" id="book-agents">
+    <!-- 06 leo-api -->
+    <article class="project reveal" id="leo-api">
       <div class="project-head">
         <span class="num">06</span>
         <div>
-          <h3>多 Agent 长文本创作系统 <span class="en">· bookAgents</span></h3>
-          <p class="project-meta">多 Agent 编排 · 2026.08 – 2026.09 · Python / LangGraph / FastAPI</p>
+          <h3>开源全栈 API <span class="en">· leo-api</span></h3>
+          <p class="project-meta">Node.js 佐证 · Express 4 / Sequelize / MySQL / Redis</p>
         </div>
       </div>
-      <p class="lede">面向长篇小说创作的多 Agent 流水线：细纲 → 写作 → 审校打分 → 定向重写 → 定稿，全程由状态机驱动。设定、人物、伏笔、时间线作为结构化知识资产被各 Agent 共享并自动回写，解决长文本跨章一致性问题。</p>
+      <p class="lede">leo-api 是一套基于 Node.js 的开源全栈 API，用于在本地跑通接口、数据与实时推送的后端链路。后端以 Express 4 直接依赖搭建，Sequelize 操作 MySQL，22 个迁移管理表结构演进，路由按前台、管理端与第三方入口分层；JWT 三层鉴权与 SSE 通道覆盖权限和消息推送。架构与取舍由我主导，实现含 AI 协作。项目自建开源，Docker Compose 本地启动，无自动化测试，未上生产环境。</p>
 
-      <div class="media-slot" data-media="book-agents"></div>
+      <div class="media-slot" data-media="leo-api"></div>
 
       <div class="project-grid">
         <div>
           <h4>关键设计</h4>
           <ul>
-            <li>章节状态机六态（DRAFT / WRITING / REVIEWING / REVISION / FINAL / NEEDS_REWRITE），不达标自动重写、崩溃后按 checkpoint 断点续跑，准确率优先于无人值守。</li>
-            <li>写作与审校分用不同模型与温度（生成 0.9、审校 0.1–0.3），避免模型自评偏袒；审校含 AI 味检测，默认最多重写 2 次，阈值与轮次可配置。</li>
-            <li>伏笔账本 / 时间线 / 层级摘要树作为共享上下文，写作时按「前章摘要 + 卷/全书及更早章节摘要」分层注入，不把全书塞进窗口；四档人机确认粒度可调。</li>
+            <li>跨进程 SSE：连接分散在多个进程时单进程广播会丢消息，故用 Redis Pub/Sub 做公共总线，配独立订阅连接、并发锁、25s 心跳与关闭清理。</li>
+            <li>JWT 三层鉴权：用户、管理员（role=100）与 SSE 分离，实时通道不复用高权限令牌，兼容原生 EventSource 的 <code>?token=</code>。</li>
+            <li>22 个迁移、10 个模型，表结构演进可版本化回放与回滚。</li>
           </ul>
         </div>
         <div>
-          <h4>可验证结果</h4>
+          <h4>项目价值</h4>
           <ul>
-            <li><strong>21 个</strong>离线单测全部通过（约 2 s），覆盖状态机、知识回写与流水线闭环。</li>
-            <li>真实运行 32 章定稿 / 目标 100 章、累计 <strong>23.7 万字</strong>，平均审校分 <strong>89.2</strong>，全部章节带细纲与摘要；Web UI 可浏览进度、状态与消耗。</li>
-            <li>架构设计与命令链完整落地：init / outline / run / book / reader 全流程可复现，含 SQLite checkpoint 与独立审校 / 核查模块。</li>
+            <li>与 Python / FastAPI 两套 AI 项目形成 Node.js + Python 双栈证据。</li>
+            <li>Express 为 <code>~4.16.1</code> 直接依赖，可正面说明对 Express 的熟悉程度。</li>
           </ul>
         </div>
       </div>
 
-      <p class="boundary"><strong>已知边界</strong>：质量把关靠审校打分与人工通读，非文学同行评审；token 费用统计依赖本地日志、仓库内为空；仅本机 Web UI，无在线演示；创作粒度与节奏需人工定夺，系统不替代作者决策。</p>
-      <p class="tags"><span>Python</span><span>LangGraph</span><span>FastAPI</span><span>SQLite</span><span>状态机</span><span>多 Agent</span><span>pytest</span></p>
-      <p class="project-links"><a href="https://github.com/zuishuailxy/bookAgents" target="_blank" rel="noopener noreferrer">开源代码与架构设计 →</a></p>
+      <p class="boundary"><strong>已知边界</strong>：自建开源项目，Docker Compose 本地起 MySQL，无自动化测试，非生产运行，仅作本地演示与能力佐证。</p>
+      <p class="tags"><span>Express 4</span><span>Sequelize</span><span>MySQL</span><span>Redis Pub/Sub</span><span>SSE</span><span>Docker Compose</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/KnowledgeBase/tree/master/full-stack/leo-api" target="_blank" rel="noopener noreferrer">开源代码 →</a></p>
     </article>
   </section>
 
