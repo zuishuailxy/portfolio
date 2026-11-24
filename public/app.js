@@ -38,11 +38,12 @@ const MEDIA = {
   },
   "leo-api":        { image: "", video: "", embed: "", caption: "" },
   "local-asr": {
+    video: "assets/showcase/asr-demo.mp4",
     gallery: [
       { src: "assets/showcase/asr-result.webp", caption: "上传识别：状态流水线走到「完成」，输出识别文本、语言、音频时长与处理耗时" },
       { src: "assets/showcase/asr-upload.webp", caption: "初始界面：语言选择、麦克风录音与上传入口，模型准备完成后全程离线" }
     ],
-    caption: "真实运行界面（示例音频，非真实用户数据）"
+    caption: "真实运行录屏与界面截图（示例音频，非真实用户数据）"
   },
   "book-agents": {
     gallery: [
