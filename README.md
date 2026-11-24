@@ -9,13 +9,14 @@ AI 应用开发工程师求职作品集。纯静态站，零构建步骤、零�
 public/
   index.html          单页，全部内容
   styles.css          全部样式
-  app.js              媒体挂载 + 页脚年份（仅此两件事）
+  app.js              媒体挂载 / 灯箱 / 滚动动效 / 页脚年份
   Li-Xiaoyang-AI-Engineer-Resume.pdf   简历 PDF（构建产物，见下节）
   assets/
     favicon.svg       站点图标（矢量）
     favicon-32.png    32×32 位图图标
     apple-touch-icon.png  180×180，iOS 添加到主屏
     og-cover.png      1200×630 社交分享封面
+    showcase/         项目录屏与界面截图（WebP / MP4，见 app.js 的 MEDIA）
 render.yaml           Render Blueprint（静态站，发布 public/）
 scripts/build-resume.py  简历 PDF 无损重压缩（见「简历 PDF 的来源」）
 INTERVIEW-NOTES.md   面试话术与取舍判断（本地准备材料，不发布）
@@ -63,6 +64,12 @@ python3 scripts/build-resume.py ~/Project/简历/李晓阳-硕士-AI应用开发
 | 21 / 20 / 7 / 300s | 错误码 / 恢复提示 / 高危规则 / 审批超时 | 同上 |
 | 20 / 6 / 31 / 14 | student-admin 的 API / 表 / 后端测试 / 决策记录 | 简历「其他开源项目」段 |
 | 22 / 10 | leo-api 的数据库迁移 / 模型 | 同上 |
+| 234 / 7 / 5 | local-asr 的默认单测 / 真实模型 / 浏览器 E2E | 该项目 README「测试」与 `docs/test-report.md` |
+| 0.1795 / 0 | local-asr 断网实测中文 CER / 英文 WER | 该项目 README「离线验证」与 `docs/evidence/offline.txt` |
+| 21 | bookAgents 离线单测数 | 该项目 `pytest -q` 实跑 21 passed；README 原写 6 个已修正 |
+| 32 / 100 / 236962 | bookAgents 定稿章数 / 目标章数 / 总字数 | 该项目 `/api/project` 与 Web UI 仪表盘 |
+| 89.2 | bookAgents 平均审校分 | 该项目 Web UI 仪表盘 |
+| 0.2308 → 0.0769 | local-asr 的 small / medium 中文 CER 基准 | 该项目 README「可选 medium 模型」与 `scripts/benchmark_models.py` |
 
 新增数字前先确认能回源，否则不要写进页面。
 

@@ -36,7 +36,20 @@ const MEDIA = {
     ],
     caption: "线上演示环境录屏与界面截图（seed 演示数据，非真实学员信息）"
   },
-  "leo-api":        { image: "", video: "", embed: "", caption: "" }
+  "leo-api":        { image: "", video: "", embed: "", caption: "" },
+  "local-asr": {
+    gallery: [
+      { src: "assets/showcase/asr-result.webp", caption: "上传识别：状态流水线走到「完成」，输出识别文本、语言、音频时长与处理耗时" },
+      { src: "assets/showcase/asr-upload.webp", caption: "初始界面：语言选择、麦克风录音与上传入口，模型准备完成后全程离线" }
+    ],
+    caption: "真实运行界面（示例音频，非真实用户数据）"
+  },
+  "book-agents": {
+    gallery: [
+      { src: "assets/showcase/agent-pipeline.webp", caption: "运行仪表盘：32/100 章定稿、23.7 万字、平均审校分 89.2，章节表含状态 / 轮次 / 得分 / 细纲 / 摘要" }
+    ],
+    caption: "多 Agent 流水线运行界面（本地 Web UI）"
+  }
 };
 
 /* 图片放大灯箱：点击截图放大到接近原图，支持左右切换 / Esc / 点击遮罩关闭 */

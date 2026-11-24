@@ -75,7 +75,7 @@
   <section class="section" id="work">
     <div class="section-head reveal">
       <p class="eyebrow">SELECTED WORK</p>
-      <h2>四个作品，四条证据链</h2>
+      <h2>六个作品，六条证据链</h2>
       <p class="section-note">每个项目都写明「做了什么」「数字怎么来的」「哪里还没做到」。架构与取舍由我主导，实现过程中与 AI 协作。</p>
     </div>
 
@@ -233,6 +233,80 @@
       <p class="boundary"><strong>已知边界</strong>：自建开源项目，Docker Compose 本地起 MySQL，无自动化测试，非生产运行，仅作本地演示与能力佐证。</p>
       <p class="tags"><span>Express 4</span><span>Sequelize</span><span>MySQL</span><span>Redis Pub/Sub</span><span>SSE</span><span>Docker Compose</span></p>
       <p class="project-links"><a href="https://github.com/zuishuailxy/KnowledgeBase/tree/master/full-stack/leo-api" target="_blank" rel="noopener noreferrer">开源代码 →</a></p>
+    </article>
+
+    <!-- 05 local-asr -->
+    <article class="project reveal" id="local-asr">
+      <div class="project-head">
+        <span class="num">05</span>
+        <div>
+          <h3>本地语音转文字系统 <span class="en">· Local ASR</span></h3>
+          <p class="project-meta">端侧推理 · 2026.10 · Python / faster-whisper / WebSocket</p>
+        </div>
+      </div>
+      <p class="lede">浏览器中英文语音转文字。麦克风录音或上传音频，本地 CPU 模型完成识别；模型准备完成后可完全断网运行，音频不出本机。</p>
+
+      <div class="media-slot" data-media="local-asr"></div>
+
+      <div class="project-grid">
+        <div>
+          <h4>关键设计</h4>
+          <ul>
+            <li>本地 faster-whisper + CTranslate2 int8 推理，模型惰性加载；下载脚本是唯一联网入口，识别链路全程离线。</li>
+            <li>实时识别走 WebSocket：16 kHz PCM 分片、3 秒滚动窗口出 partial（beam 1 降延迟），停止后对完整音频出 final；AudioWorklet 优先，旧浏览器回退 ScriptProcessor。</li>
+            <li>统一错误码与 request_id 结构化日志，日志只记语言、时长、耗时与错误码，不落音频与文本原文。</li>
+          </ul>
+        </div>
+        <div>
+          <h4>可验证结果</h4>
+          <ul>
+            <li><strong>234 个</strong>离线单元测试（默认不加载模型、不访问外网）；另有真实模型测试 7 项、浏览器 E2E 5 项分层执行。</li>
+            <li>断网卡对实测：12 s 中文 processing 4.36 s、CER <strong>0.1795</strong>；9 s 英文 1.36 s、WER <strong>0</strong>。</li>
+            <li>small / medium 同条件基准：中文 CER 0.2308 → 0.0769，但 medium 的 3 s 实时窗口需 3.7–3.9 s，超出预算，故默认仍用 small。</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="boundary"><strong>已知边界</strong>：单用户本机应用，无登录、并发与历史记录，只绑定 127.0.0.1；small 模型存在近音字错误（CER 约 0.18–0.23）；样本仅覆盖单人安静环境、正常语速，噪声与远场未覆盖；在线演示不可用。</p>
+      <p class="tags"><span>Python 3.12</span><span>FastAPI</span><span>faster-whisper</span><span>CTranslate2</span><span>PyAV</span><span>WebSocket</span><span>AudioWorklet</span><span>zhconv</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application" target="_blank" rel="noopener noreferrer">开源代码与文档 →</a></p>
+    </article>
+
+    <!-- 06 bookAgents -->
+    <article class="project reveal" id="book-agents">
+      <div class="project-head">
+        <span class="num">06</span>
+        <div>
+          <h3>多 Agent 长文本创作系统 <span class="en">· bookAgents</span></h3>
+          <p class="project-meta">多 Agent 编排 · 2026.08 – 2026.09 · Python / LangGraph / FastAPI</p>
+        </div>
+      </div>
+      <p class="lede">面向长篇小说创作的多 Agent 流水线：细纲 → 写作 → 审校打分 → 定向重写 → 定稿，全程由状态机驱动。设定、人物、伏笔、时间线作为结构化知识资产被各 Agent 共享并自动回写，解决长文本跨章一致性问题。</p>
+
+      <div class="media-slot" data-media="book-agents"></div>
+
+      <div class="project-grid">
+        <div>
+          <h4>关键设计</h4>
+          <ul>
+            <li>章节状态机六态（DRAFT / WRITING / REVIEWING / REVISION / FINAL / NEEDS_REWRITE），不达标自动重写、崩溃后按 checkpoint 断点续跑，准确率优先于无人值守。</li>
+            <li>写作与审校分用不同模型与温度（生成 0.9、审校 0.1–0.3），避免模型自评偏袒；审校含 AI 味检测，默认最多重写 2 次，阈值与轮次可配置。</li>
+            <li>伏笔账本 / 时间线 / 层级摘要树作为共享上下文，写作时按「前章摘要 + 卷/全书及更早章节摘要」分层注入，不把全书塞进窗口；四档人机确认粒度可调。</li>
+          </ul>
+        </div>
+        <div>
+          <h4>可验证结果</h4>
+          <ul>
+            <li><strong>21 个</strong>离线单测全部通过（约 2 s），覆盖状态机、知识回写与流水线闭环。</li>
+            <li>真实运行 32 章定稿 / 目标 100 章、累计 <strong>23.7 万字</strong>，平均审校分 <strong>89.2</strong>，全部章节带细纲与摘要；Web UI 可浏览进度、状态与消耗。</li>
+            <li>架构设计与命令链完整落地：init / outline / run / book / reader 全流程可复现，含 SQLite checkpoint 与独立审校 / 核查模块。</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="boundary"><strong>已知边界</strong>：质量把关靠审校打分与人工通读，非文学同行评审；token 费用统计依赖本地日志、仓库内为空；仅本机 Web UI，无在线演示；创作粒度与节奏需人工定夺，系统不替代作者决策。</p>
+      <p class="tags"><span>Python</span><span>LangGraph</span><span>FastAPI</span><span>SQLite</span><span>状态机</span><span>多 Agent</span><span>pytest</span></p>
+      <p class="project-links"><a href="https://github.com/zuishuailxy/bookAgents" target="_blank" rel="noopener noreferrer">开源代码与架构设计 →</a></p>
     </article>
   </section>
 
